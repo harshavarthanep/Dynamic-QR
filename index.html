@@ -6,7 +6,7 @@
     <title>QR Manager Pro</title>
     <script type="text/javascript" src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
     <style>
-        :root { --primary: #0969da; --danger: #cf222e; --bg: #0d1117; --card: #161b22; --border: #30363d; --text: #c9d1d9; }
+        :root { --primary: #0969da; --danger: #cf222e; --success: #1f883d; --bg: #0d1117; --card: #161b22; --border: #30363d; --text: #c9d1d9; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         
         /* UTILS */
@@ -17,18 +17,18 @@
         .btn { cursor: pointer; padding: 10px 16px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); font-weight: 600; font-size: 14px; transition: 0.2s; }
         .btn-primary { background-color: var(--primary); color: white; border: none; }
         .btn-danger { background-color: var(--danger); color: white; border: none; }
+        .btn-success { background-color: var(--success); color: white; border: none; }
         .btn-secondary { background-color: #21262d; color: var(--text); border: 1px solid var(--border); }
         .btn:hover { opacity: 0.85; }
         
         input { background: #0d1117; border: 1px solid var(--border); color: var(--text); padding: 10px; border-radius: 6px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-size: 16px; }
         input:focus { border-color: var(--primary); outline: none; }
-        
-        /* Disabled Input Style (The "Locked" Look) */
         input:disabled { opacity: 0.5; cursor: not-allowed; background-color: #25282e; border-color: #444; }
 
         /* LOGIN SCREEN */
-        #login-screen { text-align: center; margin-top: 80px; }
+        #login-screen { text-align: center; margin-top: 60px; }
         .token-guide { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 6px; text-align: left; margin-bottom: 20px; font-size: 0.95em; line-height: 1.6; }
+        .token-guide li { margin-bottom: 8px; }
 
         /* DASHBOARD */
         header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid var(--border); margin-bottom: 20px; width: 100%; }
@@ -46,7 +46,7 @@
         .actions { display: flex; gap: 8px; }
 
         /* MODALS */
-        #loader { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(13, 17, 23, 0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999; backdrop-filter: blur(5px); }
+        #loader { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(13, 17, 23, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999; backdrop-filter: blur(5px); }
         .spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s infinite linear; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
@@ -63,23 +63,35 @@
 
     <div id="login-screen" class="container hidden">
         <h1>🔐 Admin Login</h1>
+        
         <div class="token-guide">
-            <strong>One-time Setup:</strong>
+            <strong>If you are new:</strong>
             <ol>
-                <li>Log in to GitHub.com</li>
+                <li>Log in to GitHub.com.</li>
                 <li>Go to <strong>Settings</strong> > <strong>Developer settings</strong> > <strong>Personal access tokens (Classic)</strong>.</li>
                 <li>Generate new token. Select <code>gist</code> scope.</li>
-                <li>Paste the key (starts with <code>ghp_...</code>) below.</li>
+                <li>Paste the key below.</li>
             </ol>
+            <hr style="border-color: #30363d; margin: 15px 0;">
+            <strong>⚠️ Lost your token?</strong>
+            <p style="margin:0; color: #8b949e; font-size: 0.9em;">
+                Don't worry. Your data is safe in your GitHub account.<br>
+                Simply generate a <strong>New Token</strong> on GitHub and paste it here.<br> 
+                The app will automatically find your existing database.
+            </p>
         </div>
-        <input type="password" id="api-token" placeholder="ghp_xxxxxxxxxxxx" />
-        <button class="btn btn-primary" style="width:100%; padding: 15px;" onclick="handleLogin()">Login Dashboard</button>
+
+        <input type="password" id="api-token" placeholder="Paste Token (ghp_xxxxxxxxxxxx)" />
+        <button class="btn btn-primary" style="width:100%; padding: 15px;" onclick="handleLogin()">Login / Restore Session</button>
     </div>
 
     <div id="dashboard" class="container hidden">
         <header>
             <div style="font-weight:bold; font-size:1.4em;">QR Link Manager</div>
-            <button class="btn btn-secondary" onclick="logout()">Logout</button>
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-secondary" onclick="backupData()">💾 Backup</button>
+                <button class="btn btn-secondary" onclick="logout()">Logout</button>
+            </div>
         </header>
 
         <div class="editor-panel">
@@ -123,6 +135,7 @@
         window.onload = async () => {
             const params = new URLSearchParams(window.location.search);
             
+            // ROUTER: Redirect Mode vs Admin Mode
             if (params.get('id') && params.get('u') && params.get('g')) {
                 performRedirect(params.get('u'), params.get('g'), params.get('id'));
             } else {
@@ -139,19 +152,27 @@
             
             GITHUB_TOKEN = token;
             localStorage.setItem("gh_token", token);
+            
+            // Clear old Gist ID to force a re-search (in case this is a different account)
+            localStorage.removeItem("gh_gist_id");
+            GIST_ID = null;
+
             initDashboard();
         }
 
         async function initDashboard() {
             show("loader");
             try {
+                // 1. Get User Info
                 const userReq = await fetch("https://api.github.com/user", { headers: { Authorization: `token ${GITHUB_TOKEN}` }});
-                if(!userReq.ok) throw new Error("Token invalid");
+                if(!userReq.ok) throw new Error("Token invalid. Please generate a new one.");
                 const userData = await userReq.json();
                 localStorage.setItem("gh_username", userData.login);
 
+                // 2. Find existing Gist (Recovery Logic) or Create New
                 if (!GIST_ID) await findOrCreateGist();
 
+                // 3. Load Data
                 await refreshData();
                 show("dashboard");
             } catch (err) {
@@ -160,6 +181,30 @@
             } finally {
                 hide("loader");
             }
+        }
+
+        async function findOrCreateGist() {
+            // Fetch ALL gists for this user
+            const res = await fetch("https://api.github.com/gists", { headers: { Authorization: `token ${GITHUB_TOKEN}` }});
+            const gists = await res.json();
+            
+            // Look for our specific database file
+            const existing = gists.find(g => g.files[GIST_FILENAME]);
+            
+            if (existing) {
+                // FOUND IT! Restore session.
+                GIST_ID = existing.id;
+            } else {
+                // Create new if truly empty
+                const create = await fetch("https://api.github.com/gists", {
+                    method: "POST",
+                    headers: { Authorization: `token ${GITHUB_TOKEN}` },
+                    body: JSON.stringify({ description: GIST_DESC, public: true, files: { [GIST_FILENAME]: { content: "{}" } } })
+                });
+                const created = await create.json();
+                GIST_ID = created.id;
+            }
+            localStorage.setItem("gh_gist_id", GIST_ID);
         }
 
         async function refreshData() {
@@ -171,25 +216,6 @@
             const content = data.files[GIST_FILENAME].content;
             DB_DATA = JSON.parse(content || "{}");
             renderList();
-        }
-
-        async function findOrCreateGist() {
-            const res = await fetch("https://api.github.com/gists", { headers: { Authorization: `token ${GITHUB_TOKEN}` }});
-            const gists = await res.json();
-            const existing = gists.find(g => g.files[GIST_FILENAME]);
-            
-            if (existing) {
-                GIST_ID = existing.id;
-            } else {
-                const create = await fetch("https://api.github.com/gists", {
-                    method: "POST",
-                    headers: { Authorization: `token ${GITHUB_TOKEN}` },
-                    body: JSON.stringify({ description: GIST_DESC, public: true, files: { [GIST_FILENAME]: { content: "{}" } } })
-                });
-                const created = await create.json();
-                GIST_ID = created.id;
-            }
-            localStorage.setItem("gh_gist_id", GIST_ID);
         }
 
         async function syncToGitHub() {
@@ -246,7 +272,7 @@
             if (!id || !url) return alert("Fill in both ID and URL");
             if (!url.startsWith("http")) url = "https://" + url;
 
-            // Save new/updated entry (ID never changes if we are editing because input is locked)
+            // ID is locked during edit, so we just overwrite the value
             DB_DATA[id] = url; 
             
             cancelEdit();
@@ -255,13 +281,10 @@
 
         function startEdit(id) {
             window.scrollTo(0,0);
-            
-            // Populate Fields
             document.getElementById("inp-id").value = id;
-            document.getElementById("inp-id").disabled = true; // <--- LOCK THE ID INPUT
+            document.getElementById("inp-id").disabled = true; // Lock ID
             document.getElementById("inp-url").value = DB_DATA[id];
             
-            // UI Feedback
             document.getElementById("editor-heading").innerText = "Edit Link: " + id;
             document.getElementById("btn-save").innerText = "Update Link";
             document.getElementById("btn-save").classList.remove("btn-primary");
@@ -271,7 +294,7 @@
 
         function cancelEdit() {
             document.getElementById("inp-id").value = "";
-            document.getElementById("inp-id").disabled = false; // <--- UNLOCK ID FOR NEW ENTRIES
+            document.getElementById("inp-id").disabled = false; // Unlock ID
             document.getElementById("inp-url").value = "";
             
             document.getElementById("editor-heading").innerText = "Add New Link";
@@ -286,6 +309,16 @@
                 delete DB_DATA[id];
                 syncToGitHub();
             }
+        }
+
+        function backupData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(DB_DATA, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "qr_backup.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
         }
 
         // ================= QR & REDIRECT =================
