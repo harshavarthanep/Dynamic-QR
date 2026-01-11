@@ -3,205 +3,349 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Manager Pro</title>
+    <title>Infinity Link Manager</title>
     <script type="text/javascript" src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
     <style>
-        :root { --primary: #0969da; --danger: #cf222e; --success: #1f883d; --bg: #0d1117; --card: #161b22; --border: #30363d; --text: #c9d1d9; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-        
-        /* UTILS */
+        :root {
+            --brand: #2f81f7;
+            --brand-glow: rgba(47, 129, 247, 0.4);
+            --bg: #010409;
+            --surface: #0d1117;
+            --surface-glass: rgba(13, 17, 23, 0.7);
+            --border: #30363d;
+            --text-main: #f0f6fc;
+            --text-muted: #8b949e;
+            --danger: #da3633;
+        }
+
+        * { box-sizing: border-box; outline: none; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            background-image: radial-gradient(circle at 50% 0%, #161b22 0%, var(--bg) 100%);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+
+        /* --- LAYOUT UTILS --- */
+        .container { width: 100%; max-width: 700px; padding: 20px; z-index: 10; }
         .hidden { display: none !important; }
-        .container { width: 100%; max-width: 800px; padding: 20px; box-sizing: border-box; }
-        
-        /* BUTTONS & INPUTS */
-        .btn { cursor: pointer; padding: 10px 16px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); font-weight: 600; font-size: 14px; transition: 0.2s; text-decoration: none; display: inline-block; text-align: center; }
-        .btn-primary { background-color: var(--primary); color: white; border: none; }
-        .btn-danger { background-color: var(--danger); color: white; border: none; }
-        .btn-secondary { background-color: #21262d; color: var(--text); border: 1px solid var(--border); }
-        .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
-        .btn:hover { opacity: 0.85; }
-        
-        input { background: #0d1117; border: 1px solid var(--border); color: var(--text); padding: 10px; border-radius: 6px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-size: 16px; }
-        input:focus { border-color: var(--primary); outline: none; }
-        input:disabled { opacity: 0.5; cursor: not-allowed; background-color: #25282e; border-color: #444; }
 
-        /* LOGIN SCREEN */
-        #login-screen { text-align: center; margin-top: 60px; }
-        .token-guide { background: var(--card); border: 1px solid var(--border); padding: 25px; border-radius: 8px; text-align: left; margin-bottom: 25px; font-size: 0.95em; line-height: 1.6; }
-        .token-guide ol { padding-left: 20px; margin: 10px 0; }
-        .token-guide li { margin-bottom: 10px; }
-
-        /* DASHBOARD */
-        header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid var(--border); margin-bottom: 20px; width: 100%; }
+        /* --- BUTTONS --- */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            padding: 12px 20px; border-radius: 8px; font-weight: 600; font-size: 0.95rem;
+            cursor: pointer; transition: all 0.2s; border: 1px solid transparent;
+            text-decoration: none;
+        }
+        .btn:active { transform: scale(0.98); }
         
-        /* EDITOR */
-        .editor-panel { background: var(--card); padding: 20px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 30px; }
-        .editor-title { margin-top: 0; font-size: 1.1em; color: #fff; margin-bottom: 15px; }
-        .input-group { display: flex; gap: 10px; flex-wrap: wrap; }
-        
-        /* LIST */
-        .link-item { background: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 15px; }
-        .link-info { flex: 1; min-width: 200px; }
-        .link-id { font-weight: bold; color: #58a6ff; font-size: 1.2em; display: block; margin-bottom: 4px; }
-        .link-url { color: #8b949e; font-size: 0.9em; word-break: break-all; }
-        .actions { display: flex; gap: 8px; }
+        .btn-primary {
+            background: var(--brand); color: white;
+            box-shadow: 0 0 15px var(--brand-glow);
+        }
+        .btn-primary:hover { background: #58a6ff; box-shadow: 0 0 25px var(--brand-glow); }
 
-        /* MODALS */
-        #loader { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(13, 17, 23, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999; backdrop-filter: blur(5px); }
-        .spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s infinite linear; }
+        .btn-secondary {
+            background: #21262d; color: var(--text-main); border: 1px solid var(--border);
+        }
+        .btn-secondary:hover { background: #30363d; border-color: #8b949e; }
+
+        .btn-danger { background: rgba(218, 54, 51, 0.1); color: #f85149; border: 1px solid rgba(248, 81, 73, 0.4); }
+        .btn-danger:hover { background: rgba(218, 54, 51, 0.2); }
+
+        /* --- INPUTS --- */
+        input {
+            background: #0d1117; border: 1px solid var(--border);
+            color: var(--text-main); padding: 14px; border-radius: 8px;
+            width: 100%; font-size: 1rem; transition: 0.2s;
+        }
+        input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(47, 129, 247, 0.15); }
+        input:disabled { opacity: 0.5; background: #161b22; cursor: not-allowed; }
+
+        /* --- CARDS --- */
+        .glass-card {
+            background: var(--surface-glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        /* --- LOGIN SCREEN --- */
+        #login-screen { text-align: center; margin-top: 8vh; }
+        .hero-title {
+            font-size: 2.5rem; font-weight: 800; margin-bottom: 10px;
+            background: linear-gradient(135deg, #fff 0%, #8b949e 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .instructions {
+            text-align: left; background: rgba(255,255,255,0.03);
+            padding: 20px; border-radius: 12px; margin: 25px 0; border: 1px solid var(--border);
+        }
+        .step-row { display: flex; gap: 15px; margin-bottom: 15px; align-items: start; }
+        .step-num { 
+            background: var(--brand); color: white; width: 24px; height: 24px; 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+            font-size: 0.8rem; font-weight: bold; flex-shrink: 0; margin-top: 2px;
+        }
+        .step-text { font-size: 0.95rem; color: var(--text-muted); line-height: 1.5; }
+        
+        /* --- DASHBOARD --- */
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .logo { font-weight: 700; font-size: 1.2rem; color: white; letter-spacing: -0.5px; }
+        .badge { font-size: 0.75rem; background: #238636; padding: 2px 8px; border-radius: 10px; margin-left: 8px; vertical-align: middle; }
+
+        /* --- LIST ITEMS --- */
+        .link-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 18px; border-bottom: 1px solid var(--border);
+            transition: 0.2s; flex-wrap: wrap; gap: 15px;
+        }
+        .link-item:last-child { border-bottom: none; }
+        .link-item:hover { background: rgba(255,255,255,0.02); }
+        
+        .id-pill { 
+            color: var(--brand); font-family: monospace; font-size: 1.1rem; font-weight: bold; 
+            background: rgba(47, 129, 247, 0.1); padding: 4px 8px; border-radius: 6px; 
+            display: inline-block; margin-bottom: 6px;
+        }
+        .url-text { font-size: 0.9rem; color: var(--text-muted); word-break: break-all; }
+
+        /* --- MODAL (PREMIUM LOOK) --- */
+        #qr-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px);
+            z-index: 100; display: flex; align-items: center; justify-content: center;
+        }
+        .modal-body {
+            background: #161b22; border: 1px solid var(--border);
+            padding: 0; border-radius: 20px; text-align: center;
+            width: 90%; max-width: 350px; overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s ease-out;
+        }
+        .qr-header { padding: 20px; background: #0d1117; border-bottom: 1px solid var(--border); }
+        .qr-stage { background: white; padding: 25px; display: flex; justify-content: center; }
+        .qr-footer { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+
+        /* --- LOADER --- */
+        #loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg); z-index: 200;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .spinner {
+            width: 50px; height: 50px; border: 4px solid var(--border);
+            border-top-color: var(--brand); border-radius: 50%;
+            animation: spin 1s infinite linear;
+        }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        #qr-modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 100; }
-        .modal-content { background: white; padding: 25px; border-radius: 12px; text-align: center; color: black; max-width: 320px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
     </style>
 </head>
 <body>
 
     <div id="loader" class="hidden">
         <div class="spinner"></div>
-        <p id="loader-text" style="margin-top: 20px; font-weight: bold;">Loading...</p>
+        <p id="loader-text" style="margin-top: 20px; color: var(--text-muted); letter-spacing: 1px;">INITIALIZING</p>
     </div>
 
-    <div id="login-screen" class="container hidden">
-        <h1>🔐 Admin Login</h1>
+    <div id="login-screen" class="container hidden fade-in">
+        <div class="hero-title">Infinity Link</div>
+        <p style="color: var(--text-muted); margin-bottom: 30px;">Serverless Dynamic QR Manager</p>
         
-        <div class="token-guide">
-            <strong>How to get your Key:</strong>
-            <ol>
-                <li>
-                    Click the button below to open GitHub settings.<br>
-                    <a href="https://github.com/settings/tokens/new?scopes=gist&description=QR%20App" target="_blank" class="btn btn-secondary" style="margin-top:8px; font-size:0.9em;">
-                        🔑 Open GitHub Token Page
-                    </a>
-                </li>
-                <li>Scroll to the bottom of that page and click the green <strong>Generate token</strong> button.</li>
-                <li>Copy the code (starts with <code>ghp_...</code>) and paste it here.</li>
-            </ol>
-            
-            <p style="margin-top:20px; color: #8b949e; font-size: 0.9em; border-top: 1px solid #30363d; padding-top: 15px;">
-                <strong>Note:</strong> If you lost your old token, just generate a new one. Your existing data will reappear automatically!
-            </p>
+        <div class="glass-card instructions">
+            <div class="step-row">
+                <div class="step-num">1</div>
+                <div class="step-text">
+                    Click the button below to open GitHub. It will auto-fill the correct settings.
+                </div>
+            </div>
+            <a href="https://github.com/settings/tokens/new?scopes=gist&description=Infinity%20QR%20Manager" target="_blank" class="btn btn-secondary" style="width:100%; justify-content: center; margin-bottom: 15px;">
+                <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" style="margin-right:8px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
+                Generate Key on GitHub
+            </a>
+            <div class="step-row">
+                <div class="step-num">2</div>
+                <div class="step-text">Scroll down, click <strong>Generate token</strong> (green button).</div>
+            </div>
+            <div class="step-row">
+                <div class="step-num">3</div>
+                <div class="step-text">Copy the key starting with <code>ghp_...</code> and paste it below.</div>
+            </div>
         </div>
 
-        <input type="password" id="api-token" placeholder="Paste Token here (ghp_xxxxxxxxxxxx)" />
-        <button class="btn btn-primary" style="width:100%; padding: 15px; font-size: 1.1em;" onclick="handleLogin()">Login / Restore Session</button>
+        <input type="password" id="api-token" placeholder="Paste your Key here..." />
+        <button class="btn btn-primary" style="width:100%; margin-top: 15px; height: 50px; font-size: 1rem;" onclick="handleLogin()">
+            Authenticate
+        </button>
     </div>
 
-    <div id="dashboard" class="container hidden">
+    <div id="dashboard" class="container hidden fade-in">
         <header>
-            <div style="font-weight:bold; font-size:1.4em;">QR Link Manager</div>
+            <div class="logo">Infinity<span style="color:var(--brand)">Link</span><span class="badge">PRO</span></div>
             <div style="display:flex; gap:10px;">
-                <button class="btn btn-secondary" onclick="backupData()">💾 Backup</button>
-                <button class="btn btn-secondary" onclick="logout()">Logout</button>
+                <button class="btn btn-secondary" onclick="backupData()" title="Download Backup">💾</button>
+                <button class="btn btn-danger" onclick="logout()" title="Logout">Logout</button>
             </div>
         </header>
 
-        <div class="editor-panel">
-            <h3 class="editor-title" id="editor-heading">Add New Link</h3>
-            <div class="input-group">
-                <input id="inp-id" type="text" placeholder="Short ID (e.g. promo)" style="flex:1;">
-                <input id="inp-url" type="url" placeholder="Destination URL (https://...)" style="flex:2;">
+        <div class="glass-card">
+            <h3 id="editor-heading" style="margin-top:0; margin-bottom: 15px;">Create New Link</h3>
+            <div style="display:flex; gap:10px; flex-wrap: wrap; margin-bottom: 15px;">
+                <input id="inp-id" type="text" placeholder="Short ID (e.g. promo)" style="flex:1; min-width: 120px;">
+                <input id="inp-url" type="url" placeholder="Destination URL (https://...)" style="flex:2; min-width: 200px;">
             </div>
-            <div style="margin-top: 10px; display: flex; gap: 10px;">
-                <button id="btn-save" class="btn btn-primary" style="flex:1" onclick="saveLink()">Add Link</button>
-                <button id="btn-cancel" class="btn btn-secondary hidden" onclick="cancelEdit()">Cancel Edit</button>
+            <div style="display:flex; gap: 10px;">
+                <button id="btn-save" class="btn btn-primary" style="flex:1" onclick="saveLink()">Create Link</button>
+                <button id="btn-cancel" class="btn btn-secondary hidden" onclick="cancelEdit()">Cancel</button>
             </div>
         </div>
 
-        <h3 style="color: #8b949e; font-size: 0.9em; text-transform: uppercase;">Active Links</h3>
-        <div id="link-list"></div>
+        <h4 style="color:var(--text-muted); text-transform:uppercase; font-size:0.8rem; letter-spacing:1px; margin-bottom:15px;">Active Connections</h4>
+        <div id="link-list" class="glass-card" style="padding: 0; overflow: hidden;"></div>
     </div>
 
     <div id="qr-modal" class="hidden">
-        <div class="modal-content">
-            <h3 style="margin-top:0">Scan Me</h3>
-            <div id="qr-canvas"></div>
-            <p id="qr-target-id" style="font-weight:bold; color: var(--primary); margin: 10px 0;"></p>
-            <button class="btn btn-primary" style="width:100%;" onclick="downloadQR()">Download PNG</button>
-            <button class="btn btn-danger" style="width:100%; margin-top:12px;" onclick="closeModal()">Close Window</button>
+        <div class="modal-body">
+            <div class="qr-header">
+                <h3 style="margin:0; color:white;">Scan Code</h3>
+                <div id="qr-target-id" style="color:var(--brand); font-family:monospace; margin-top:5px;"></div>
+            </div>
+            <div class="qr-stage">
+                <div id="qr-canvas"></div>
+            </div>
+            <div class="qr-footer">
+                <button class="btn btn-primary" style="width:100%" onclick="downloadQR()">Download PNG</button>
+                <button class="btn btn-secondary" style="width:100%" onclick="closeModal()">Close</button>
+            </div>
         </div>
     </div>
 
     <script>
-        // ================= STATE =================
+        // ================= CONFIG =================
         const GIST_FILENAME = "qr_database.json";
-        const GIST_DESC = "Database for QR App";
+        const GIST_DESC = "Infinity QR Database";
+        
         let GITHUB_TOKEN = localStorage.getItem("gh_token");
         let GIST_ID = localStorage.getItem("gh_gist_id");
-        let DB_DATA = {}; 
-
+        let DB_DATA = {};
+        
         const appUrl = window.location.href.split('?')[0];
-        const qrCode = new QRCodeStyling({ width: 220, height: 220, type: "svg", dotsOptions: { color: "#000000", type: "square" }});
+        // QR Settings: High quality, sleek
+        const qrCode = new QRCodeStyling({
+            width: 240, height: 240, type: "svg",
+            dotsOptions: { color: "#111", type: "extra-rounded" },
+            backgroundOptions: { color: "#ffffff" },
+            cornersSquareOptions: { type: "extra-rounded" }
+        });
 
-        // ================= INIT =================
+        // ================= ROUTER =================
         window.onload = async () => {
             const params = new URLSearchParams(window.location.search);
             
-            // ROUTER: Redirect Mode vs Admin Mode
+            // Check if this is a Redirect Request
             if (params.get('id') && params.get('u') && params.get('g')) {
                 performRedirect(params.get('u'), params.get('g'), params.get('id'));
             } else {
-                if (GITHUB_TOKEN) initDashboard();
-                else show("login-screen");
+                // Admin Panel Logic
+                if (GITHUB_TOKEN) {
+                    switchTo("loader");
+                    await initDashboard();
+                } else {
+                    switchTo("login-screen");
+                }
             }
         };
 
-        // ================= ADMIN LOGIC =================
+        // ================= VIEW MANAGER (Fixes Ghost Login) =================
+        function switchTo(viewId) {
+            // 1. Hide EVERYTHING first
+            ['loader', 'login-screen', 'dashboard', 'qr-modal'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            // 2. Show the target
+            document.getElementById(viewId).classList.remove('hidden');
+        }
 
+        // ================= AUTH LOGIC =================
         async function handleLogin() {
             const token = document.getElementById("api-token").value.trim();
-            if (token.length < 10) return alert("Please enter a valid token");
+            if (token.length < 5) return alert("Please enter a valid token.");
             
             GITHUB_TOKEN = token;
             localStorage.setItem("gh_token", token);
-            
-            // Clear old Gist ID to force a re-search (in case this is a different account)
-            localStorage.removeItem("gh_gist_id");
+            localStorage.removeItem("gh_gist_id"); // Reset ID to force re-check
             GIST_ID = null;
 
-            initDashboard();
+            switchTo("loader"); // Show loader immediately
+            await initDashboard();
         }
 
         async function initDashboard() {
-            show("loader");
             try {
-                // 1. Get User Info
-                const userReq = await fetch("https://api.github.com/user", { headers: { Authorization: `token ${GITHUB_TOKEN}` }});
-                if(!userReq.ok) throw new Error("Token invalid. Please generate a new one.");
+                // 1. Validate Token & Get User
+                const userReq = await fetch("https://api.github.com/user", { 
+                    headers: { Authorization: `token ${GITHUB_TOKEN}` }
+                });
+                
+                if(!userReq.ok) {
+                    throw new Error("Invalid Token. Please generate a new one.");
+                }
+                
                 const userData = await userReq.json();
                 localStorage.setItem("gh_username", userData.login);
 
-                // 2. Find existing Gist (Recovery Logic) or Create New
+                // 2. Find or Create Database
                 if (!GIST_ID) await findOrCreateGist();
 
-                // 3. Load Data
+                // 3. Load Content
                 await refreshData();
-                show("dashboard");
+                
+                // 4. Show Dashboard
+                switchTo("dashboard");
+
             } catch (err) {
-                alert("Login Error: " + err.message);
+                alert("Login Failed: " + err.message);
                 logout();
-            } finally {
-                hide("loader");
             }
         }
 
+        // ================= GITHUB API LOGIC =================
         async function findOrCreateGist() {
-            // Fetch ALL gists for this user
-            const res = await fetch("https://api.github.com/gists", { headers: { Authorization: `token ${GITHUB_TOKEN}` }});
+            const res = await fetch("https://api.github.com/gists", { 
+                headers: { Authorization: `token ${GITHUB_TOKEN}` }
+            });
             const gists = await res.json();
             
-            // Look for our specific database file
             const existing = gists.find(g => g.files[GIST_FILENAME]);
             
             if (existing) {
-                // FOUND IT! Restore session.
                 GIST_ID = existing.id;
             } else {
-                // Create new if truly empty
+                // Create New Gist
                 const create = await fetch("https://api.github.com/gists", {
                     method: "POST",
                     headers: { Authorization: `token ${GITHUB_TOKEN}` },
-                    body: JSON.stringify({ description: GIST_DESC, public: true, files: { [GIST_FILENAME]: { content: "{}" } } })
+                    body: JSON.stringify({ 
+                        description: GIST_DESC, 
+                        public: true, 
+                        files: { [GIST_FILENAME]: { content: "{}" } } 
+                    })
                 });
                 const created = await create.json();
                 GIST_ID = created.id;
@@ -221,30 +365,37 @@
         }
 
         async function syncToGitHub() {
-            show("loader");
+            // Show subtle loader text or similar, but kept simple here
+            const saveBtn = document.getElementById('btn-save');
+            const originalText = saveBtn.innerText;
+            saveBtn.innerText = "Saving...";
+            saveBtn.disabled = true;
+
             try {
                 await fetch(`https://api.github.com/gists/${GIST_ID}`, {
                     method: "PATCH",
                     headers: { Authorization: `token ${GITHUB_TOKEN}` },
-                    body: JSON.stringify({ files: { [GIST_FILENAME]: { content: JSON.stringify(DB_DATA, null, 2) } } })
+                    body: JSON.stringify({ 
+                        files: { [GIST_FILENAME]: { content: JSON.stringify(DB_DATA, null, 2) } } 
+                    })
                 });
                 await refreshData();
             } catch(e) {
-                alert("Sync failed: " + e.message);
+                alert("Sync Error: " + e.message);
             } finally {
-                hide("loader");
+                saveBtn.innerText = originalText;
+                saveBtn.disabled = false;
             }
         }
 
-        // ================= UI ACTIONS =================
-
+        // ================= DASHBOARD UI =================
         function renderList() {
             const list = document.getElementById("link-list");
             list.innerHTML = "";
             const ids = Object.keys(DB_DATA).reverse(); 
 
             if(ids.length === 0) {
-                list.innerHTML = "<div style='text-align:center; padding:20px; color:#555;'>No links yet. Create one above.</div>";
+                list.innerHTML = "<div style='text-align:center; padding:30px; color:var(--text-muted);'>No active links. Create one above!</div>";
                 return;
             }
 
@@ -253,14 +404,14 @@
                 const item = document.createElement("div");
                 item.className = "link-item";
                 item.innerHTML = `
-                    <div class="link-info">
-                        <span class="link-id">${id}</span>
-                        <span class="link-url">${url}</span>
+                    <div style="flex:1; min-width:200px;">
+                        <span class="id-pill">${id}</span>
+                        <div class="url-text">${url}</div>
                     </div>
-                    <div class="actions">
-                        <button class="btn btn-secondary" onclick="startEdit('${id}')">✏️ Edit</button>
-                        <button class="btn btn-secondary" onclick="showQR('${id}')">📱 QR</button>
-                        <button class="btn btn-danger" onclick="deleteLink('${id}')">🗑️</button>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn btn-secondary" onclick="startEdit('${id}')">Edit</button>
+                        <button class="btn btn-secondary" onclick="showQR('${id}')">QR</button>
+                        <button class="btn btn-danger" onclick="deleteLink('${id}')">×</button>
                     </div>
                 `;
                 list.appendChild(item);
@@ -271,105 +422,121 @@
             const id = document.getElementById("inp-id").value.trim();
             let url = document.getElementById("inp-url").value.trim();
 
-            if (!id || !url) return alert("Fill in both ID and URL");
+            if (!id || !url) return alert("Please fill in both fields.");
             if (!url.startsWith("http")) url = "https://" + url;
 
-            // ID is locked during edit, so we just overwrite the value
-            DB_DATA[id] = url; 
+            // Update Local Data (ID locked if editing, so this is safe)
+            DB_DATA[id] = url;
             
             cancelEdit();
             syncToGitHub();
         }
 
         function startEdit(id) {
-            window.scrollTo(0,0);
-            document.getElementById("inp-id").value = id;
-            document.getElementById("inp-id").disabled = true; // Lock ID
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            const idInput = document.getElementById("inp-id");
+            idInput.value = id;
+            idInput.disabled = true; // Lock ID
+            
             document.getElementById("inp-url").value = DB_DATA[id];
             
-            document.getElementById("editor-heading").innerText = "Edit Link: " + id;
-            document.getElementById("btn-save").innerText = "Update Link";
-            document.getElementById("btn-save").classList.remove("btn-primary");
-            document.getElementById("btn-save").style.backgroundColor = "#238636"; 
+            document.getElementById("editor-heading").innerText = "Editing: " + id;
+            const btn = document.getElementById("btn-save");
+            btn.innerText = "Update Link";
+            btn.classList.remove("btn-primary");
+            btn.style.background = "#238636"; // GitHub Green
+            
             document.getElementById("btn-cancel").classList.remove("hidden");
         }
 
         function cancelEdit() {
-            document.getElementById("inp-id").value = "";
-            document.getElementById("inp-id").disabled = false; // Unlock ID
+            const idInput = document.getElementById("inp-id");
+            idInput.value = "";
+            idInput.disabled = false;
             document.getElementById("inp-url").value = "";
             
-            document.getElementById("editor-heading").innerText = "Add New Link";
-            document.getElementById("btn-save").innerText = "Add Link";
-            document.getElementById("btn-save").classList.add("btn-primary");
-            document.getElementById("btn-save").style.backgroundColor = ""; 
+            document.getElementById("editor-heading").innerText = "Create New Link";
+            const btn = document.getElementById("btn-save");
+            btn.innerText = "Create Link";
+            btn.classList.add("btn-primary");
+            btn.style.background = "";
+            
             document.getElementById("btn-cancel").classList.add("hidden");
         }
 
         async function deleteLink(id) {
-            if(confirm(`Are you sure you want to delete "${id}"? This will break any printed QR codes.`)) {
+            if(confirm(`Delete "${id}"? This breaks existing QR codes.`)) {
                 delete DB_DATA[id];
                 syncToGitHub();
             }
         }
 
-        function backupData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(DB_DATA, null, 2));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "qr_backup.json");
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
-        }
-
         // ================= QR & REDIRECT =================
-
         function showQR(id) {
             const user = localStorage.getItem("gh_username");
+            // The Magic URL
             const finalLink = `${appUrl}?u=${user}&g=${GIST_ID}&id=${id}`;
             
             document.getElementById("qr-canvas").innerHTML = "";
             qrCode.update({ data: finalLink });
             qrCode.append(document.getElementById("qr-canvas"));
-            document.getElementById("qr-target-id").innerText = id;
+            document.getElementById("qr-target-id").innerText = id.toUpperCase();
             
-            show("qr-modal");
+            switchTo("qr-modal");
+        }
+
+        function closeModal() {
+            document.getElementById("qr-modal").classList.add("hidden");
+            document.getElementById("dashboard").classList.remove("hidden");
+        }
+
+        function downloadQR() {
+            qrCode.download({ name: "infinity-qr", extension: "png" });
         }
 
         async function performRedirect(user, gistId, linkId) {
-            show("loader");
-            document.getElementById("loader-text").innerText = "Opening Link...";
+            // Show Loader
+            switchTo("loader");
+            document.getElementById("loader-text").innerText = "CONNECTING...";
 
+            // Cache Buster
             const t = new Date().getTime();
             const rawUrl = `https://gist.githubusercontent.com/${user}/${gistId}/raw/${GIST_FILENAME}?t=${t}`;
 
             try {
                 const res = await fetch(rawUrl);
-                if (!res.ok) throw new Error("Link database not found");
+                if (!res.ok) throw new Error("Database not found");
                 const data = await res.json();
                 
                 if (data[linkId]) {
+                    // SUCCESS: Redirect
                     window.location.replace(data[linkId]);
                 } else {
-                    alert(`Link ID "${linkId}" not found.`);
-                    hide("loader");
-                    show("login-screen");
+                    alert(`ID "${linkId}" not found.`);
+                    switchTo("login-screen");
                 }
             } catch (err) {
-                alert("Error: " + err.message);
-                hide("loader");
+                alert("Redirect Error: " + err.message);
+                switchTo("login-screen");
             }
         }
 
-        function downloadQR() { qrCode.download({ name: "qr-code", extension: "png" }); }
-        
         // ================= UTILS =================
-        function logout() { localStorage.clear(); location.reload(); }
-        function show(id) { document.getElementById(id).classList.remove("hidden"); }
-        function hide(id) { document.getElementById(id).classList.add("hidden"); }
-        function closeModal() { hide("qr-modal"); }
+        function logout() {
+            localStorage.clear();
+            location.reload();
+        }
 
+        function backupData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(DB_DATA, null, 2));
+            const anchor = document.createElement('a');
+            anchor.setAttribute("href", dataStr);
+            anchor.setAttribute("download", "infinity_backup.json");
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+        }
     </script>
 </body>
 </html>
