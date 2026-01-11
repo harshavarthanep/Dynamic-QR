@@ -18,11 +18,13 @@
         .btn-primary { background-color: var(--primary); color: white; border: none; }
         .btn-danger { background-color: var(--danger); color: white; border: none; }
         .btn-secondary { background-color: #21262d; color: var(--text); border: 1px solid var(--border); }
-        .btn-close { background-color: #333; color: white; border: none; margin-top: 10px; }
         .btn:hover { opacity: 0.85; }
         
         input { background: #0d1117; border: 1px solid var(--border); color: var(--text); padding: 10px; border-radius: 6px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-size: 16px; }
         input:focus { border-color: var(--primary); outline: none; }
+        
+        /* Disabled Input Style (The "Locked" Look) */
+        input:disabled { opacity: 0.5; cursor: not-allowed; background-color: #25282e; border-color: #444; }
 
         /* LOGIN SCREEN */
         #login-screen { text-align: center; margin-top: 80px; }
@@ -113,7 +115,6 @@
         let GITHUB_TOKEN = localStorage.getItem("gh_token");
         let GIST_ID = localStorage.getItem("gh_gist_id");
         let DB_DATA = {}; 
-        let EDITING_OLD_ID = null; // Stores the original ID when editing
 
         const appUrl = window.location.href.split('?')[0];
         const qrCode = new QRCodeStyling({ width: 220, height: 220, type: "svg", dotsOptions: { color: "#000000", type: "square" }});
@@ -239,20 +240,14 @@
         }
 
         function saveLink() {
-            const newId = document.getElementById("inp-id").value.trim();
-            let newUrl = document.getElementById("inp-url").value.trim();
+            const id = document.getElementById("inp-id").value.trim();
+            let url = document.getElementById("inp-url").value.trim();
 
-            if (!newId || !newUrl) return alert("Fill in both ID and URL");
-            if (!newUrl.startsWith("http")) newUrl = "https://" + newUrl;
+            if (!id || !url) return alert("Fill in both ID and URL");
+            if (!url.startsWith("http")) url = "https://" + url;
 
-            // HANDLE ID CHANGE LOGIC
-            if (EDITING_OLD_ID && EDITING_OLD_ID !== newId) {
-                // User changed the ID name. Delete the old key.
-                delete DB_DATA[EDITING_OLD_ID];
-            }
-
-            // Save new/updated entry
-            DB_DATA[newId] = newUrl; 
+            // Save new/updated entry (ID never changes if we are editing because input is locked)
+            DB_DATA[id] = url; 
             
             cancelEdit();
             syncToGitHub();
@@ -261,12 +256,9 @@
         function startEdit(id) {
             window.scrollTo(0,0);
             
-            // Set Global "Old ID" tracking variable
-            EDITING_OLD_ID = id;
-
             // Populate Fields
             document.getElementById("inp-id").value = id;
-            document.getElementById("inp-id").disabled = false; // ENABLED so you can edit it
+            document.getElementById("inp-id").disabled = true; // <--- LOCK THE ID INPUT
             document.getElementById("inp-url").value = DB_DATA[id];
             
             // UI Feedback
@@ -278,9 +270,8 @@
         }
 
         function cancelEdit() {
-            EDITING_OLD_ID = null; // Clear tracking
-
             document.getElementById("inp-id").value = "";
+            document.getElementById("inp-id").disabled = false; // <--- UNLOCK ID FOR NEW ENTRIES
             document.getElementById("inp-url").value = "";
             
             document.getElementById("editor-heading").innerText = "Add New Link";
@@ -291,7 +282,7 @@
         }
 
         async function deleteLink(id) {
-            if(confirm(`Are you sure you want to delete "${id}"?`)) {
+            if(confirm(`Are you sure you want to delete "${id}"? This will break any printed QR codes.`)) {
                 delete DB_DATA[id];
                 syncToGitHub();
             }
