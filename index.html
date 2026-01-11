@@ -18,21 +18,20 @@
         .btn-primary { background-color: var(--primary); color: white; border: none; }
         .btn-danger { background-color: var(--danger); color: white; border: none; }
         .btn-secondary { background-color: #21262d; color: var(--text); border: 1px solid var(--border); }
+        .btn-close { background-color: #333; color: white; border: none; margin-top: 10px; }
         .btn:hover { opacity: 0.85; }
         
         input { background: #0d1117; border: 1px solid var(--border); color: var(--text); padding: 10px; border-radius: 6px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-size: 16px; }
         input:focus { border-color: var(--primary); outline: none; }
-        input:disabled { opacity: 0.6; cursor: not-allowed; }
 
         /* LOGIN SCREEN */
         #login-screen { text-align: center; margin-top: 80px; }
         .token-guide { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 6px; text-align: left; margin-bottom: 20px; font-size: 0.95em; line-height: 1.6; }
-        code { background: rgba(110,118,129,0.4); padding: 2px 5px; border-radius: 4px; }
 
         /* DASHBOARD */
         header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid var(--border); margin-bottom: 20px; width: 100%; }
         
-        /* EDIT PANEL */
+        /* EDITOR */
         .editor-panel { background: var(--card); padding: 20px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 30px; }
         .editor-title { margin-top: 0; font-size: 1.1em; color: #fff; margin-bottom: 15px; }
         .input-group { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -42,7 +41,6 @@
         .link-info { flex: 1; min-width: 200px; }
         .link-id { font-weight: bold; color: #58a6ff; font-size: 1.2em; display: block; margin-bottom: 4px; }
         .link-url { color: #8b949e; font-size: 0.9em; word-break: break-all; }
-        
         .actions { display: flex; gap: 8px; }
 
         /* MODALS */
@@ -51,7 +49,7 @@
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
         #qr-modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 100; }
-        .modal-content { background: white; padding: 25px; border-radius: 12px; text-align: center; color: black; max-width: 320px; width: 90%; }
+        .modal-content { background: white; padding: 25px; border-radius: 12px; text-align: center; color: black; max-width: 320px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
     </style>
 </head>
 <body>
@@ -68,7 +66,7 @@
             <ol>
                 <li>Log in to GitHub.com</li>
                 <li>Go to <strong>Settings</strong> > <strong>Developer settings</strong> > <strong>Personal access tokens (Classic)</strong>.</li>
-                <li>Generate new token (classic). Select <code>gist</code> scope.</li>
+                <li>Generate new token. Select <code>gist</code> scope.</li>
                 <li>Paste the key (starts with <code>ghp_...</code>) below.</li>
             </ol>
         </div>
@@ -104,7 +102,7 @@
             <div id="qr-canvas"></div>
             <p id="qr-target-id" style="font-weight:bold; color: var(--primary); margin: 10px 0;"></p>
             <button class="btn btn-primary" style="width:100%;" onclick="downloadQR()">Download PNG</button>
-            <button class="btn btn-secondary" style="width:100%; margin-top:10px; border-color: #ddd; color: #333;" onclick="closeModal()">Close</button>
+            <button class="btn btn-danger" style="width:100%; margin-top:12px;" onclick="closeModal()">Close Window</button>
         </div>
     </div>
 
@@ -115,6 +113,7 @@
         let GITHUB_TOKEN = localStorage.getItem("gh_token");
         let GIST_ID = localStorage.getItem("gh_gist_id");
         let DB_DATA = {}; 
+        let EDITING_OLD_ID = null; // Stores the original ID when editing
 
         const appUrl = window.location.href.split('?')[0];
         const qrCode = new QRCodeStyling({ width: 220, height: 220, type: "svg", dotsOptions: { color: "#000000", type: "square" }});
@@ -123,7 +122,6 @@
         window.onload = async () => {
             const params = new URLSearchParams(window.location.search);
             
-            // ROUTER: If params exist, it's a Redirect. If not, it's Admin.
             if (params.get('id') && params.get('u') && params.get('g')) {
                 performRedirect(params.get('u'), params.get('g'), params.get('id'));
             } else {
@@ -146,18 +144,14 @@
         async function initDashboard() {
             show("loader");
             try {
-                // 1. Get User Info
                 const userReq = await fetch("https://api.github.com/user", { headers: { Authorization: `token ${GITHUB_TOKEN}` }});
                 if(!userReq.ok) throw new Error("Token invalid");
                 const userData = await userReq.json();
                 localStorage.setItem("gh_username", userData.login);
 
-                // 2. Find/Create Gist
                 if (!GIST_ID) await findOrCreateGist();
 
-                // 3. Load Data
                 await refreshData();
-                
                 show("dashboard");
             } catch (err) {
                 alert("Login Error: " + err.message);
@@ -168,7 +162,6 @@
         }
 
         async function refreshData() {
-            // "no-store" is crucial to avoid caching stale data
             const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, { 
                 headers: { Authorization: `token ${GITHUB_TOKEN}` },
                 cache: "no-store" 
@@ -206,11 +199,11 @@
                     headers: { Authorization: `token ${GITHUB_TOKEN}` },
                     body: JSON.stringify({ files: { [GIST_FILENAME]: { content: JSON.stringify(DB_DATA, null, 2) } } })
                 });
-                await refreshData(); // Re-fetch to ensure sync
+                await refreshData();
             } catch(e) {
                 alert("Sync failed: " + e.message);
             } finally {
-                hide("loader"); // <--- THIS WAS FIXING THE BUG
+                hide("loader");
             }
         }
 
@@ -219,7 +212,7 @@
         function renderList() {
             const list = document.getElementById("link-list");
             list.innerHTML = "";
-            const ids = Object.keys(DB_DATA).reverse(); // Newest first
+            const ids = Object.keys(DB_DATA).reverse(); 
 
             if(ids.length === 0) {
                 list.innerHTML = "<div style='text-align:center; padding:20px; color:#555;'>No links yet. Create one above.</div>";
@@ -246,42 +239,48 @@
         }
 
         function saveLink() {
-            const id = document.getElementById("inp-id").value.trim();
-            let url = document.getElementById("inp-url").value.trim();
+            const newId = document.getElementById("inp-id").value.trim();
+            let newUrl = document.getElementById("inp-url").value.trim();
 
-            if (!id || !url) return alert("Fill in both ID and URL");
-            // Basic URL validation
-            if (!url.startsWith("http")) url = "https://" + url;
+            if (!newId || !newUrl) return alert("Fill in both ID and URL");
+            if (!newUrl.startsWith("http")) newUrl = "https://" + newUrl;
 
-            DB_DATA[id] = url; // Update Local State
+            // HANDLE ID CHANGE LOGIC
+            if (EDITING_OLD_ID && EDITING_OLD_ID !== newId) {
+                // User changed the ID name. Delete the old key.
+                delete DB_DATA[EDITING_OLD_ID];
+            }
+
+            // Save new/updated entry
+            DB_DATA[newId] = newUrl; 
             
-            // Reset Form
             cancelEdit();
-            
-            // Push to Server
             syncToGitHub();
         }
 
         function startEdit(id) {
-            // Scroll to top
             window.scrollTo(0,0);
             
+            // Set Global "Old ID" tracking variable
+            EDITING_OLD_ID = id;
+
             // Populate Fields
             document.getElementById("inp-id").value = id;
-            document.getElementById("inp-id").disabled = true; // Lock ID (Keys cannot change)
+            document.getElementById("inp-id").disabled = false; // ENABLED so you can edit it
             document.getElementById("inp-url").value = DB_DATA[id];
             
-            // Change Button State
+            // UI Feedback
             document.getElementById("editor-heading").innerText = "Edit Link: " + id;
             document.getElementById("btn-save").innerText = "Update Link";
             document.getElementById("btn-save").classList.remove("btn-primary");
-            document.getElementById("btn-save").style.backgroundColor = "#238636"; // Green
+            document.getElementById("btn-save").style.backgroundColor = "#238636"; 
             document.getElementById("btn-cancel").classList.remove("hidden");
         }
 
         function cancelEdit() {
+            EDITING_OLD_ID = null; // Clear tracking
+
             document.getElementById("inp-id").value = "";
-            document.getElementById("inp-id").disabled = false;
             document.getElementById("inp-url").value = "";
             
             document.getElementById("editor-heading").innerText = "Add New Link";
@@ -316,7 +315,6 @@
             show("loader");
             document.getElementById("loader-text").innerText = "Opening Link...";
 
-            // CACHE BUSTER: Add random number to URL to force fresh fetch
             const t = new Date().getTime();
             const rawUrl = `https://gist.githubusercontent.com/${user}/${gistId}/raw/${GIST_FILENAME}?t=${t}`;
 
@@ -330,7 +328,7 @@
                 } else {
                     alert(`Link ID "${linkId}" not found.`);
                     hide("loader");
-                    show("login-screen"); // Fallback to login if link fails
+                    show("login-screen");
                 }
             } catch (err) {
                 alert("Error: " + err.message);
