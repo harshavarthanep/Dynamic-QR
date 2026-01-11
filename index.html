@@ -3,143 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Link Manager</title>
+    <title>QR Manager Pro</title>
     <script type="text/javascript" src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
     <style>
-        :root { --primary: #2da44e; --bg: #0d1117; --card: #161b22; --border: #30363d; --text: #c9d1d9; }
+        :root { --primary: #0969da; --danger: #cf222e; --bg: #0d1117; --card: #161b22; --border: #30363d; --text: #c9d1d9; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         
-        /* --- UTILS --- */
+        /* UTILS */
         .hidden { display: none !important; }
         .container { width: 100%; max-width: 800px; padding: 20px; box-sizing: border-box; }
-        .btn { cursor: pointer; padding: 8px 16px; border-radius: 6px; border: 1px solid rgba(27,31,36,0.15); font-weight: 600; font-size: 14px; transition: 0.2s; }
+        
+        /* BUTTONS & INPUTS */
+        .btn { cursor: pointer; padding: 10px 16px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); font-weight: 600; font-size: 14px; transition: 0.2s; }
         .btn-primary { background-color: var(--primary); color: white; border: none; }
-        .btn-danger { background-color: #cf222e; color: white; border: none; }
+        .btn-danger { background-color: var(--danger); color: white; border: none; }
         .btn-secondary { background-color: #21262d; color: var(--text); border: 1px solid var(--border); }
-        input { background: #0d1117; border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 6px; width: 100%; box-sizing: border-box; margin-bottom: 10px; }
+        .btn:hover { opacity: 0.85; }
         
-        /* --- LOGIN SCREEN --- */
-        #login-screen { text-align: center; margin-top: 100px; }
-        .token-guide { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 6px; text-align: left; margin-bottom: 20px; font-size: 0.9em; }
+        input { background: #0d1117; border: 1px solid var(--border); color: var(--text); padding: 10px; border-radius: 6px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-size: 16px; }
+        input:focus { border-color: var(--primary); outline: none; }
+        input:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        /* --- DASHBOARD --- */
-        #dashboard { width: 100%; }
-        header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+        /* LOGIN SCREEN */
+        #login-screen { text-align: center; margin-top: 80px; }
+        .token-guide { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 6px; text-align: left; margin-bottom: 20px; font-size: 0.95em; line-height: 1.6; }
+        code { background: rgba(110,118,129,0.4); padding: 2px 5px; border-radius: 4px; }
+
+        /* DASHBOARD */
+        header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid var(--border); margin-bottom: 20px; width: 100%; }
         
-        /* Table Style List */
-        .link-list { display: flex; flex-direction: column; gap: 10px; }
-        .link-item { background: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        /* EDIT PANEL */
+        .editor-panel { background: var(--card); padding: 20px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 30px; }
+        .editor-title { margin-top: 0; font-size: 1.1em; color: #fff; margin-bottom: 15px; }
+        .input-group { display: flex; gap: 10px; flex-wrap: wrap; }
+        
+        /* LIST */
+        .link-item { background: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 15px; }
         .link-info { flex: 1; min-width: 200px; }
-        .link-id { font-weight: bold; color: #58a6ff; font-size: 1.1em; }
-        .link-url { color: #8b949e; font-size: 0.85em; word-break: break-all; }
-        .actions { display: flex; gap: 10px; }
-
-        /* --- QR MODAL --- */
-        #qr-modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 100; }
-        .modal-content { background: white; padding: 20px; border-radius: 12px; text-align: center; color: black; max-width: 300px; }
+        .link-id { font-weight: bold; color: #58a6ff; font-size: 1.2em; display: block; margin-bottom: 4px; }
+        .link-url { color: #8b949e; font-size: 0.9em; word-break: break-all; }
         
-        /* --- LOADING OVERLAY --- */
-        #loader { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; }
+        .actions { display: flex; gap: 8px; }
+
+        /* MODALS */
+        #loader { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(13, 17, 23, 0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999; backdrop-filter: blur(5px); }
         .spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s infinite linear; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        /* --- REDIRECT MSG --- */
-        .redirect-msg { text-align: center; padding: 50px; }
+        #qr-modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 100; }
+        .modal-content { background: white; padding: 25px; border-radius: 12px; text-align: center; color: black; max-width: 320px; width: 90%; }
     </style>
 </head>
 <body>
 
     <div id="loader" class="hidden">
         <div class="spinner"></div>
-        <p id="loader-text" style="margin-top: 20px;">Loading...</p>
+        <p id="loader-text" style="margin-top: 20px; font-weight: bold;">Loading...</p>
     </div>
 
     <div id="login-screen" class="container hidden">
         <h1>🔐 Admin Login</h1>
         <div class="token-guide">
-            <strong>How to get your Free Database Key:</strong>
+            <strong>One-time Setup:</strong>
             <ol>
-                <li>Log in to GitHub.</li>
+                <li>Log in to GitHub.com</li>
                 <li>Go to <strong>Settings</strong> > <strong>Developer settings</strong> > <strong>Personal access tokens (Classic)</strong>.</li>
-                <li>Click <strong>Generate new token (classic)</strong>.</li>
-                <li><strong>Note:</strong> "QR App"</li>
-                <li><strong>Scopes:</strong> Check the box for <code>gist</code> (Create gists).</li>
-                <li>Generate and copy the key starting with <code>ghp_...</code></li>
+                <li>Generate new token (classic). Select <code>gist</code> scope.</li>
+                <li>Paste the key (starts with <code>ghp_...</code>) below.</li>
             </ol>
         </div>
-        <input type="password" id="api-token" placeholder="Paste your GitHub Token (ghp_...)" />
-        <button class="btn btn-primary" style="width:100%" onclick="handleLogin()">Login to Dashboard</button>
+        <input type="password" id="api-token" placeholder="ghp_xxxxxxxxxxxx" />
+        <button class="btn btn-primary" style="width:100%; padding: 15px;" onclick="handleLogin()">Login Dashboard</button>
     </div>
 
     <div id="dashboard" class="container hidden">
         <header>
-            <div style="font-weight:bold; font-size:1.2em;">QR Manager</div>
+            <div style="font-weight:bold; font-size:1.4em;">QR Link Manager</div>
             <button class="btn btn-secondary" onclick="logout()">Logout</button>
         </header>
 
-        <div style="background: var(--card); padding: 15px; border-radius: 6px; border: 1px solid var(--border); margin-bottom: 30px;">
-            <h3 style="margin-top:0">Add New Link</h3>
-            <div style="display:flex; gap:10px; flex-wrap: wrap;">
-                <input id="new-id" type="text" placeholder="Short ID (e.g. promo)" style="flex:1;">
-                <input id="new-url" type="url" placeholder="Destination URL (https://...)" style="flex:2;">
-                <button class="btn btn-primary" onclick="addLink()">Save</button>
+        <div class="editor-panel">
+            <h3 class="editor-title" id="editor-heading">Add New Link</h3>
+            <div class="input-group">
+                <input id="inp-id" type="text" placeholder="Short ID (e.g. promo)" style="flex:1;">
+                <input id="inp-url" type="url" placeholder="Destination URL (https://...)" style="flex:2;">
+            </div>
+            <div style="margin-top: 10px; display: flex; gap: 10px;">
+                <button id="btn-save" class="btn btn-primary" style="flex:1" onclick="saveLink()">Add Link</button>
+                <button id="btn-cancel" class="btn btn-secondary hidden" onclick="cancelEdit()">Cancel Edit</button>
             </div>
         </div>
 
-        <h3>Your Active Links</h3>
-        <div id="link-list" class="link-list">
-            </div>
+        <h3 style="color: #8b949e; font-size: 0.9em; text-transform: uppercase;">Active Links</h3>
+        <div id="link-list"></div>
     </div>
 
     <div id="qr-modal" class="hidden">
         <div class="modal-content">
-            <h3 style="margin-top:0">QR Code</h3>
+            <h3 style="margin-top:0">Scan Me</h3>
             <div id="qr-canvas"></div>
-            <p id="qr-target-id" style="font-weight:bold; color: #2da44e;"></p>
-            <button class="btn btn-primary" style="width:100%; margin-top:10px;" onclick="downloadQR()">Download PNG</button>
-            <button class="btn btn-secondary" style="width:100%; margin-top:5px;" onclick="closeModal()">Close</button>
+            <p id="qr-target-id" style="font-weight:bold; color: var(--primary); margin: 10px 0;"></p>
+            <button class="btn btn-primary" style="width:100%;" onclick="downloadQR()">Download PNG</button>
+            <button class="btn btn-secondary" style="width:100%; margin-top:10px; border-color: #ddd; color: #333;" onclick="closeModal()">Close</button>
         </div>
     </div>
 
     <script>
-        // ================= CONFIG & STATE =================
+        // ================= STATE =================
         const GIST_FILENAME = "qr_database.json";
-        const GIST_DESC = "Database for QR Code App";
+        const GIST_DESC = "Database for QR App";
         let GITHUB_TOKEN = localStorage.getItem("gh_token");
         let GIST_ID = localStorage.getItem("gh_gist_id");
-        let DB_DATA = {}; // Local copy of data
+        let DB_DATA = {}; 
 
         const appUrl = window.location.href.split('?')[0];
-        const qrCode = new QRCodeStyling({ width: 200, height: 200, type: "svg", dotsOptions: { color: "#000000", type: "square" }});
+        const qrCode = new QRCodeStyling({ width: 220, height: 220, type: "svg", dotsOptions: { color: "#000000", type: "square" }});
 
         // ================= INIT =================
         window.onload = async () => {
             const params = new URLSearchParams(window.location.search);
-            const redirectId = params.get('id');
-            const owner = params.get('u'); // The GitHub username who owns the gist
-            const gistId = params.get('g'); // The Gist ID
-
-            if (redirectId && owner && gistId) {
-                // MODE: REDIRECT (Public User)
-                performRedirect(owner, gistId, redirectId);
+            
+            // ROUTER: If params exist, it's a Redirect. If not, it's Admin.
+            if (params.get('id') && params.get('u') && params.get('g')) {
+                performRedirect(params.get('u'), params.get('g'), params.get('id'));
             } else {
-                // MODE: ADMIN
-                if (GITHUB_TOKEN) {
-                    initDashboard();
-                } else {
-                    show("login-screen");
-                }
+                if (GITHUB_TOKEN) initDashboard();
+                else show("login-screen");
             }
         };
 
-        // ================= AUTH & DATA LOGIC =================
+        // ================= ADMIN LOGIC =================
 
         async function handleLogin() {
             const token = document.getElementById("api-token").value.trim();
-            if (!token.startsWith("ghp_") && !token.startsWith("github_pat_")) {
-                alert("Invalid token format. It usually starts with ghp_");
-                return;
-            }
+            if (token.length < 10) return alert("Please enter a valid token");
+            
             GITHUB_TOKEN = token;
             localStorage.setItem("gh_token", token);
             initDashboard();
@@ -147,60 +145,30 @@
 
         async function initDashboard() {
             show("loader");
-            document.getElementById("loader-text").innerText = "Connecting to GitHub...";
-            
             try {
-                // 1. Check if user is valid
+                // 1. Get User Info
                 const userReq = await fetch("https://api.github.com/user", { headers: { Authorization: `token ${GITHUB_TOKEN}` }});
-                if(!userReq.ok) throw new Error("Invalid Token");
+                if(!userReq.ok) throw new Error("Token invalid");
                 const userData = await userReq.json();
                 localStorage.setItem("gh_username", userData.login);
 
-                // 2. Find our Database Gist
-                if (!GIST_ID) {
-                    await findOrCreateGist();
-                }
+                // 2. Find/Create Gist
+                if (!GIST_ID) await findOrCreateGist();
 
-                // 3. Fetch Data
-                await loadData();
-                renderList();
+                // 3. Load Data
+                await refreshData();
+                
                 show("dashboard");
             } catch (err) {
-                alert("Login Failed: " + err.message);
+                alert("Login Error: " + err.message);
                 logout();
             } finally {
                 hide("loader");
             }
         }
 
-        async function findOrCreateGist() {
-            // Search user's gists
-            const res = await fetch("https://api.github.com/gists", { headers: { Authorization: `token ${GITHUB_TOKEN}` }});
-            const gists = await res.json();
-            
-            const existing = gists.find(g => g.files[GIST_FILENAME]);
-            
-            if (existing) {
-                GIST_ID = existing.id;
-            } else {
-                // Create new
-                const createRes = await fetch("https://api.github.com/gists", {
-                    method: "POST",
-                    headers: { Authorization: `token ${GITHUB_TOKEN}` },
-                    body: JSON.stringify({
-                        description: GIST_DESC,
-                        public: true, // MUST BE PUBLIC FOR REDIRECTS TO WORK
-                        files: { [GIST_FILENAME]: { content: "{}" } }
-                    })
-                });
-                const created = await createRes.json();
-                GIST_ID = created.id;
-            }
-            localStorage.setItem("gh_gist_id", GIST_ID);
-        }
-
-        async function loadData() {
-            // We use API to read (always fresh)
+        async function refreshData() {
+            // "no-store" is crucial to avoid caching stale data
             const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, { 
                 headers: { Authorization: `token ${GITHUB_TOKEN}` },
                 cache: "no-store" 
@@ -208,115 +176,161 @@
             const data = await res.json();
             const content = data.files[GIST_FILENAME].content;
             DB_DATA = JSON.parse(content || "{}");
+            renderList();
         }
 
-        async function saveData() {
-            show("loader");
-            document.getElementById("loader-text").innerText = "Saving to GitHub Database...";
+        async function findOrCreateGist() {
+            const res = await fetch("https://api.github.com/gists", { headers: { Authorization: `token ${GITHUB_TOKEN}` }});
+            const gists = await res.json();
+            const existing = gists.find(g => g.files[GIST_FILENAME]);
             
+            if (existing) {
+                GIST_ID = existing.id;
+            } else {
+                const create = await fetch("https://api.github.com/gists", {
+                    method: "POST",
+                    headers: { Authorization: `token ${GITHUB_TOKEN}` },
+                    body: JSON.stringify({ description: GIST_DESC, public: true, files: { [GIST_FILENAME]: { content: "{}" } } })
+                });
+                const created = await create.json();
+                GIST_ID = created.id;
+            }
+            localStorage.setItem("gh_gist_id", GIST_ID);
+        }
+
+        async function syncToGitHub() {
+            show("loader");
             try {
                 await fetch(`https://api.github.com/gists/${GIST_ID}`, {
                     method: "PATCH",
                     headers: { Authorization: `token ${GITHUB_TOKEN}` },
-                    body: JSON.stringify({
-                        files: { [GIST_FILENAME]: { content: JSON.stringify(DB_DATA, null, 2) } }
-                    })
+                    body: JSON.stringify({ files: { [GIST_FILENAME]: { content: JSON.stringify(DB_DATA, null, 2) } } })
                 });
-                await loadData(); // Reload to be sure
-                renderList();
+                await refreshData(); // Re-fetch to ensure sync
             } catch(e) {
-                alert("Save failed");
+                alert("Sync failed: " + e.message);
             } finally {
-                hide("loader");
+                hide("loader"); // <--- THIS WAS FIXING THE BUG
             }
         }
 
-        // ================= UI FUNCTIONS =================
+        // ================= UI ACTIONS =================
 
         function renderList() {
             const list = document.getElementById("link-list");
             list.innerHTML = "";
-            
-            const ids = Object.keys(DB_DATA);
-            if (ids.length === 0) list.innerHTML = "<p style='text-align:center; color:#555;'>No links yet. Add one above.</p>";
+            const ids = Object.keys(DB_DATA).reverse(); // Newest first
+
+            if(ids.length === 0) {
+                list.innerHTML = "<div style='text-align:center; padding:20px; color:#555;'>No links yet. Create one above.</div>";
+                return;
+            }
 
             ids.forEach(id => {
                 const url = DB_DATA[id];
-                const div = document.createElement("div");
-                div.className = "link-item";
-                div.innerHTML = `
+                const item = document.createElement("div");
+                item.className = "link-item";
+                item.innerHTML = `
                     <div class="link-info">
-                        <div class="link-id">${id}</div>
-                        <div class="link-url">${url}</div>
+                        <span class="link-id">${id}</span>
+                        <span class="link-url">${url}</span>
                     </div>
                     <div class="actions">
-                        <button class="btn btn-secondary" onclick="generateQR('${id}')">QR Code</button>
-                        <button class="btn btn-danger" onclick="deleteLink('${id}')">Delete</button>
+                        <button class="btn btn-secondary" onclick="startEdit('${id}')">✏️ Edit</button>
+                        <button class="btn btn-secondary" onclick="showQR('${id}')">📱 QR</button>
+                        <button class="btn btn-danger" onclick="deleteLink('${id}')">🗑️</button>
                     </div>
                 `;
-                list.appendChild(div);
+                list.appendChild(item);
             });
         }
 
-        async function addLink() {
-            const id = document.getElementById("new-id").value.trim().replace(/[^a-zA-Z0-9-_]/g, '');
-            let url = document.getElementById("new-url").value.trim();
-            
-            if (!id || !url) return alert("Please fill both fields");
+        function saveLink() {
+            const id = document.getElementById("inp-id").value.trim();
+            let url = document.getElementById("inp-url").value.trim();
+
+            if (!id || !url) return alert("Fill in both ID and URL");
+            // Basic URL validation
             if (!url.startsWith("http")) url = "https://" + url;
 
-            DB_DATA[id] = url; // Update local
+            DB_DATA[id] = url; // Update Local State
             
-            // Clear inputs
-            document.getElementById("new-id").value = "";
-            document.getElementById("new-url").value = "";
+            // Reset Form
+            cancelEdit();
             
-            await saveData(); // Sync to GitHub
+            // Push to Server
+            syncToGitHub();
+        }
+
+        function startEdit(id) {
+            // Scroll to top
+            window.scrollTo(0,0);
+            
+            // Populate Fields
+            document.getElementById("inp-id").value = id;
+            document.getElementById("inp-id").disabled = true; // Lock ID (Keys cannot change)
+            document.getElementById("inp-url").value = DB_DATA[id];
+            
+            // Change Button State
+            document.getElementById("editor-heading").innerText = "Edit Link: " + id;
+            document.getElementById("btn-save").innerText = "Update Link";
+            document.getElementById("btn-save").classList.remove("btn-primary");
+            document.getElementById("btn-save").style.backgroundColor = "#238636"; // Green
+            document.getElementById("btn-cancel").classList.remove("hidden");
+        }
+
+        function cancelEdit() {
+            document.getElementById("inp-id").value = "";
+            document.getElementById("inp-id").disabled = false;
+            document.getElementById("inp-url").value = "";
+            
+            document.getElementById("editor-heading").innerText = "Add New Link";
+            document.getElementById("btn-save").innerText = "Add Link";
+            document.getElementById("btn-save").classList.add("btn-primary");
+            document.getElementById("btn-save").style.backgroundColor = ""; 
+            document.getElementById("btn-cancel").classList.add("hidden");
         }
 
         async function deleteLink(id) {
-            if(confirm(`Delete ${id}?`)) {
+            if(confirm(`Are you sure you want to delete "${id}"?`)) {
                 delete DB_DATA[id];
-                await saveData();
+                syncToGitHub();
             }
         }
 
         // ================= QR & REDIRECT =================
 
-        function generateQR(id) {
+        function showQR(id) {
             const user = localStorage.getItem("gh_username");
-            // The Smart URL: Points to this app + params
             const finalLink = `${appUrl}?u=${user}&g=${GIST_ID}&id=${id}`;
             
             document.getElementById("qr-canvas").innerHTML = "";
             qrCode.update({ data: finalLink });
             qrCode.append(document.getElementById("qr-canvas"));
-            
             document.getElementById("qr-target-id").innerText = id;
+            
             show("qr-modal");
         }
 
-        // THE MAGIC FIX FOR CACHING
         async function performRedirect(user, gistId, linkId) {
             show("loader");
-            document.getElementById("loader-text").innerText = "Redirecting...";
+            document.getElementById("loader-text").innerText = "Opening Link...";
 
-            // CACHE BUSTER: We append ?t=TIMESTAMP to the raw URL
-            // This forces the browser to fetch a fresh copy from GitHub, ignoring the 5-min cache
-            const timestamp = new Date().getTime();
-            const rawUrl = `https://gist.githubusercontent.com/${user}/${gistId}/raw/${GIST_FILENAME}?t=${timestamp}`;
+            // CACHE BUSTER: Add random number to URL to force fresh fetch
+            const t = new Date().getTime();
+            const rawUrl = `https://gist.githubusercontent.com/${user}/${gistId}/raw/${GIST_FILENAME}?t=${t}`;
 
             try {
                 const res = await fetch(rawUrl);
-                if (!res.ok) throw new Error("Database not found");
+                if (!res.ok) throw new Error("Link database not found");
                 const data = await res.json();
                 
-                const dest = data[linkId];
-                if (dest) {
-                    window.location.replace(dest);
+                if (data[linkId]) {
+                    window.location.replace(data[linkId]);
                 } else {
-                    alert("Link ID not found.");
+                    alert(`Link ID "${linkId}" not found.`);
                     hide("loader");
+                    show("login-screen"); // Fallback to login if link fails
                 }
             } catch (err) {
                 alert("Error: " + err.message);
@@ -324,23 +338,13 @@
             }
         }
 
-        function downloadQR() {
-            qrCode.download({ name: "qr-code", extension: "png" });
-        }
-
-        // ================= HELPERS =================
-        function logout() {
-            localStorage.removeItem("gh_token");
-            localStorage.removeItem("gh_gist_id");
-            localStorage.removeItem("gh_username");
-            location.reload();
-        }
-        function show(id) { 
-            document.querySelectorAll('.container, #loader, #qr-modal').forEach(e => e.classList.add('hidden'));
-            document.getElementById(id).classList.remove('hidden'); 
-        }
-        function hide(id) { document.getElementById(id).classList.add('hidden'); }
-        function closeModal() { show("dashboard"); }
+        function downloadQR() { qrCode.download({ name: "qr-code", extension: "png" }); }
+        
+        // ================= UTILS =================
+        function logout() { localStorage.clear(); location.reload(); }
+        function show(id) { document.getElementById(id).classList.remove("hidden"); }
+        function hide(id) { document.getElementById(id).classList.add("hidden"); }
+        function closeModal() { hide("qr-modal"); }
 
     </script>
 </body>
