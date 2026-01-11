@@ -3,361 +3,235 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic QR Generator</title>
+    <title>Mobile Dynamic QR</title>
     <script type="text/javascript" src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
     <style>
-        :root {
-            --primary: #2563eb;
-            --bg: #f8fafc;
-            --surface: #ffffff;
-            --text: #1e293b;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            min-height: 100vh;
-        }
-
-        /* Loading / Redirect Screen */
-        #redirect-screen {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            width: 100%;
-            text-align: center;
-        }
-
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid var(--primary);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* Generator UI */
-        #app-container {
-            display: none; /* Hidden by default, shown via JS */
-            width: 100%;
-            max-width: 1000px;
-            padding: 20px;
-            box-sizing: border-box;
-            flex-direction: column;
-        }
-
-        @media(min-width: 768px) {
-            #app-container { flex-direction: row; gap: 40px; align-items: flex-start; margin-top: 40px;}
-        }
-
-        .controls {
-            flex: 1;
-            background: var(--surface);
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        .preview {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: var(--surface);
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            position: sticky;
-            top: 20px;
-        }
-
-        h1 { margin-top: 0; color: var(--primary); }
-        h3 { margin-bottom: 10px; margin-top: 20px; font-size: 0.9em; text-transform: uppercase; color: #64748b; letter-spacing: 1px; }
-
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: 500; }
+        :root { --accent: #0969da; --bg: #ffffff; --text: #24292f; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; display: flex; justify-content: center; min-height: 100vh; }
         
-        input, select, textarea {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 16px;
-            box-sizing: border-box;
-            transition: border-color 0.2s;
-        }
-
-        input:focus, select:focus {
-            border-color: var(--primary);
-            outline: none;
-        }
-
-        .color-picker-row {
-            display: flex;
-            gap: 10px;
-        }
+        /* Layout */
+        #container { width: 100%; max-width: 600px; padding: 20px; display: flex; flex-direction: column; }
         
-        input[type="color"] {
-            height: 50px;
-            padding: 2px;
-            cursor: pointer;
-        }
+        /* Headings */
+        h1 { font-size: 1.5rem; margin-bottom: 10px; color: var(--accent); }
+        h2 { font-size: 1.1rem; margin-top: 25px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        
+        /* Inputs */
+        label { font-weight: 600; font-size: 0.9rem; margin-top: 15px; display: block; }
+        input, select { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #d0d7de; border-radius: 6px; font-size: 16px; box-sizing: border-box; }
+        input:focus { border-color: var(--accent); outline: 2px solid #0969da33; }
+        
+        /* Buttons */
+        .btn { background: var(--accent); color: white; border: none; padding: 15px; border-radius: 6px; font-weight: bold; width: 100%; margin-top: 20px; font-size: 1rem; cursor: pointer; }
+        .btn-outline { background: transparent; border: 1px solid var(--accent); color: var(--accent); margin-top: 10px; }
+        
+        /* Cards */
+        .card { background: #f6f8fa; border: 1px solid #d0d7de; border-radius: 6px; padding: 15px; margin-top: 10px; font-size: 0.9rem; }
+        
+        /* Loading Overlay */
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 99; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #eee; border-top: 4px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        .btn {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 15px 25px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 16px;
-            width: 100%;
-            margin-top: 20px;
-            transition: transform 0.1s;
-        }
-
-        .btn:active { transform: scale(0.98); }
-        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); margin-top: 10px; }
-
-        .database-code {
-            background: #1e1e1e;
-            color: #d4d4d4;
-            padding: 15px;
-            border-radius: 8px;
-            font-family: monospace;
-            font-size: 14px;
-            overflow-x: auto;
-            margin-top: 20px;
-            white-space: pre;
-        }
-
-        .alert {
-            background: #eff6ff;
-            border-left: 4px solid var(--primary);
-            padding: 15px;
-            margin-bottom: 20px;
-            font-size: 0.9em;
-            line-height: 1.5;
-        }
-
-        #qr-canvas { margin: 20px 0; }
-
+        /* Mobile specific adjustments */
+        #preview-area { display: flex; flex-direction: column; align-items: center; margin-top: 20px; padding: 20px; border: 1px dashed #ccc; border-radius: 8px; }
+        
+        .error-msg { color: #cf222e; background: #ffebe9; padding: 10px; border-radius: 6px; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
 
-    <div id="redirect-screen">
-        <div class="loader"></div>
-        <p>Redirecting you to the destination...</p>
-        <p id="error-msg" style="color: red; display: none;">Link not found.</p>
+    <div id="loader">
+        <div class="spinner"></div>
+        <h3 id="loader-title">Connecting...</h3>
+        <p id="loader-desc">Checking for latest links</p>
     </div>
 
-    <div id="app-container">
-        <div class="controls">
-            <h1>Dynamic QR Creator</h1>
-            <div class="alert">
-                <strong>How this works:</strong><br>
-                1. Design your QR code below.<br>
-                2. Enter a unique "ID" (e.g., <code>menu</code>) and your Destination URL.<br>
-                3. Download the QR Code.<br>
-                4. <strong>Crucial:</strong> Copy the code snippet at the bottom and update the <code>LINK_DATABASE</code> inside this index.html file to make the link work!
-            </div>
+    <div id="container" style="display:none;">
+        <h1>Mobile QR Maker</h1>
+        <p style="color:#57606a; font-size: 0.9rem;">
+            A tool to create QR codes that you can update from your phone.
+        </p>
 
-            <h3>1. Link Details</h3>
-            <div class="form-group">
-                <label>Unique ID (Short code)</label>
-                <input type="text" id="link-id" placeholder="e.g. promo2024" oninput="updateQR()">
-            </div>
-            <div class="form-group">
-                <label>Destination URL (Where to go)</label>
-                <input type="url" id="link-url" placeholder="https://example.com" oninput="generateDatabaseSnippet()">
-            </div>
-
-            <h3>2. Design - Colors</h3>
-            <div class="color-picker-row">
-                <div class="form-group" style="flex:1">
-                    <label>Dots Color</label>
-                    <input type="color" id="color-dots" value="#000000" oninput="updateQR()">
-                </div>
-                <div class="form-group" style="flex:1">
-                    <label>Background</label>
-                    <input type="color" id="color-bg" value="#ffffff" oninput="updateQR()">
-                </div>
-            </div>
-
-            <h3>3. Design - Pattern</h3>
-            <div class="form-group">
-                <label>Dot Style</label>
-                <select id="dot-style" onchange="updateQR()">
-                    <option value="square">Square (Classic)</option>
-                    <option value="dots">Dots (Modern)</option>
-                    <option value="rounded">Rounded</option>
-                    <option value="classy">Classy</option>
-                    <option value="classy-rounded">Classy Rounded</option>
-                    <option value="extra-rounded">Extra Rounded</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Corner Square Style</label>
-                <select id="corner-style" onchange="updateQR()">
-                    <option value="square">Square</option>
-                    <option value="dot">Dot</option>
-                    <option value="extra-rounded">Rounded</option>
-                </select>
-            </div>
-
-            <h3>4. Logo (Optional)</h3>
-            <div class="form-group">
-                <label>Logo URL (e.g. https://imgur.com/...)</label>
-                <input type="text" id="logo-url" placeholder="Paste image link here" oninput="updateQR()">
-            </div>
-
-            <h3>5. Implementation</h3>
-            <p style="font-size: 0.9em; color: #666;">Copy this line into the script section of this file (see "LINK_DATABASE") to activate the link:</p>
-            <div class="database-code" id="snippet-output">// Fill in ID and URL above to get code</div>
+        <div class="card">
+            <strong>🚀 How to start (Do this once):</strong>
+            <ol style="padding-left: 20px; margin: 10px 0;">
+                <li>Go to <strong>gist.github.com</strong> on your phone.</li>
+                <li>Create a new Gist.</li>
+                <li><strong>Filename:</strong> <code>links.json</code></li>
+                <li><strong>Content:</strong> Paste the code below exactly:</li>
+            </ol>
+            <textarea readonly style="width:100%; height:80px; font-family:monospace; font-size:0.8rem; border:1px solid #ddd; border-radius:4px; padding:5px;">
+{
+  "promo": "https://google.com",
+  "menu": "https://instagram.com"
+}</textarea>
+            <ol start="5" style="padding-left: 20px; margin: 10px 0;">
+                <li>Click <strong>"Create Public Gist"</strong>.</li>
+                <li>Copy the browser URL of that new Gist page.</li>
+            </ol>
         </div>
 
-        <div class="preview">
-            <h2>Preview</h2>
+        <label>1. Paste your Gist URL here:</label>
+        <input type="text" id="gist-url" placeholder="https://gist.github.com/username/..." oninput="verifyGist()">
+        <div id="gist-error" class="error-msg"></div>
+
+        <div id="controls" style="opacity: 0.5; pointer-events: none;">
+            <label>2. Short ID (e.g. "promo")</label>
+            <input type="text" id="entry-id" placeholder="Key name from your JSON" oninput="updateQR()">
+
+            <h2>Design</h2>
+            <div style="display:flex; gap:10px;">
+                <div style="flex:1">
+                    <label>Color</label>
+                    <input type="color" id="qr-color" value="#000000" style="height:45px;" oninput="updateQR()">
+                </div>
+                <div style="flex:1">
+                    <label>Background</label>
+                    <input type="color" id="bg-color" value="#ffffff" style="height:45px;" oninput="updateQR()">
+                </div>
+            </div>
+
+            <label>Logo URL (Optional)</label>
+            <input type="text" id="logo-url" placeholder="https://..." oninput="updateQR()">
+        </div>
+
+        <div id="preview-area">
             <div id="qr-canvas"></div>
-            <button class="btn" onclick="downloadQR()">Download .PNG</button>
-            <button class="btn btn-outline" onclick="downloadQR('jpeg')">Download .JPEG</button>
-            <p style="margin-top: 15px; font-size: 0.8em; color: #888; text-align: center;">
-                This QR Code points to:<br>
-                <strong id="qr-dest-preview">...</strong>
+            <p style="font-size:0.8rem; color:#666; text-align:center; margin-top:10px;">
+                This QR code is dynamic.<br>Edit your Gist JSON to change the destination.
             </p>
         </div>
+        
+        <button class="btn" onclick="downloadQR()">Download Image</button>
     </div>
 
     <script>
-        // ==========================================
-        //  PART 1: THE DATABASE (EDIT THIS AREA)
-        // ==========================================
-        // To add a new dynamic link, add a new line below:
-        // "unique-id": "destination-url",
+        // ===================================
+        // LOGIC
+        // ===================================
         
-        const LINK_DATABASE = {
-            "demo": "https://www.google.com",
-            "menu": "https://www.example.com/menu-pdf",
-            // PASTE YOUR NEW LINES HERE
-        };
-
-        // ==========================================
-        //  PART 2: APPLICATION LOGIC
-        // ==========================================
-
-        const qrContainer = document.getElementById("qr-canvas");
-        const currentHost = window.location.href.split('?')[0]; // The base URL of your site
-
-        // Initialize QR Code Styling Library
+        const currentHost = window.location.href.split('?')[0];
         let qrCode = new QRCodeStyling({
-            width: 300,
-            height: 300,
-            type: "svg",
-            data: currentHost,
-            image: "",
-            dotsOptions: { color: "#000000", type: "square" },
-            backgroundOptions: { color: "#ffffff" },
-            imageOptions: { crossOrigin: "anonymous", margin: 10 }
+            width: 250, height: 250, type: "svg",
+            dotsOptions: { color: "#000000", type: "rounded" },
+            backgroundOptions: { color: "#ffffff" }
         });
 
-        // --- Router Logic ---
-        function init() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const redirectId = urlParams.get('id');
+        window.onload = function() {
+            const params = new URLSearchParams(window.location.search);
+            // "u" = Gist Username, "g" = Gist ID, "id" = JSON Key
+            const gistUser = params.get('u');
+            const gistId = params.get('g');
+            const linkId = params.get('id');
 
-            if (redirectId) {
+            if (gistUser && gistId && linkId) {
                 // MODE: Redirect
-                handleRedirect(redirectId);
+                handleRedirect(gistUser, gistId, linkId);
             } else {
-                // MODE: Admin/Generator
-                document.getElementById('app-container').style.display = 'flex';
-                document.getElementById('qr-canvas').innerHTML = "";
+                // MODE: Creator
+                document.getElementById('container').style.display = 'flex';
                 qrCode.append(document.getElementById("qr-canvas"));
-                updateQR(); // Draw initial QR
-            }
-        }
-
-        function handleRedirect(id) {
-            document.getElementById('redirect-screen').style.display = 'flex';
-            
-            // Check database
-            if (LINK_DATABASE[id]) {
-                const dest = LINK_DATABASE[id];
-                // Optional: Add analytics tracking here if you add a service later
                 
-                // Perform redirect
-                window.location.href = dest; 
-            } else {
-                document.querySelector('.loader').style.display = 'none';
-                document.getElementById('error-msg').style.display = 'block';
-                document.getElementById('error-msg').innerText = `Error: The ID "${id}" was not found in the database.`;
+                // Load saved Gist URL
+                const savedGist = localStorage.getItem('savedGistUrl');
+                if(savedGist) {
+                    document.getElementById('gist-url').value = savedGist;
+                    verifyGist();
+                }
             }
+        };
+
+        // --- Redirect Logic ---
+        function handleRedirect(user, gistId, linkId) {
+            document.getElementById('loader').style.display = 'flex';
+            
+            // Construct RAW Gist URL (Points to latest commit)
+            const rawUrl = `https://gist.githubusercontent.com/${user}/${gistId}/raw`;
+
+            fetch(rawUrl)
+                .then(res => {
+                    if (!res.ok) throw new Error("Gist not found");
+                    return res.json();
+                })
+                .then(data => {
+                    // Find the link
+                    const dest = data[linkId] || data[linkId.trim()];
+                    if (dest) {
+                        let finalLink = dest;
+                        if (!finalLink.startsWith('http')) finalLink = 'https://' + finalLink;
+                        
+                        document.getElementById('loader-title').innerText = "Found!";
+                        window.location.replace(finalLink);
+                    } else {
+                        throw new Error(`ID "${linkId}" not found in your Gist.`);
+                    }
+                })
+                .catch(err => {
+                    document.querySelector('.spinner').style.display = 'none';
+                    document.getElementById('loader-title').innerText = "Error";
+                    document.getElementById('loader-title').style.color = "red";
+                    document.getElementById('loader-desc').innerText = err.message;
+                });
         }
 
         // --- Generator Logic ---
-        function updateQR() {
-            const id = document.getElementById('link-id').value || 'demo';
-            const dotsColor = document.getElementById('color-dots').value;
-            const bgColor = document.getElementById('color-bg').value;
-            const dotStyle = document.getElementById('dot-style').value;
-            const cornerStyle = document.getElementById('corner-style').value;
-            const logoUrl = document.getElementById('logo-url').value;
+        function verifyGist() {
+            const url = document.getElementById('gist-url').value.trim();
+            const errorBox = document.getElementById('gist-error');
+            const controls = document.getElementById('controls');
 
-            // The QR always points to YOUR site + the ID
-            const dynamicLink = `${currentHost}?id=${id}`;
-            
-            document.getElementById('qr-dest-preview').innerText = dynamicLink;
+            // Parse URL: https://gist.github.com/USERNAME/GIST_ID
+            const regex = /gist\.github\.com\/([^\/]+)\/([a-zA-Z0-9]+)/;
+            const match = url.match(regex);
 
-            qrCode.update({
-                data: dynamicLink,
-                image: logoUrl,
-                dotsOptions: {
-                    color: dotsColor,
-                    type: dotStyle
-                },
-                backgroundOptions: {
-                    color: bgColor,
-                },
-                cornersSquareOptions: {
-                    type: cornerStyle
-                }
-            });
-
-            generateDatabaseSnippet();
-        }
-
-        function generateDatabaseSnippet() {
-            const id = document.getElementById('link-id').value;
-            const url = document.getElementById('link-url').value;
-            
-            if(id && url) {
-                document.getElementById('snippet-output').innerText = `"${id}": "${url}",`;
+            if (match) {
+                errorBox.style.display = 'none';
+                controls.style.opacity = '1';
+                controls.style.pointerEvents = 'auto';
+                
+                localStorage.setItem('savedGistUrl', url);
+                updateQR();
             } else {
-                document.getElementById('snippet-output').innerText = "// Fill in ID and URL above to get code";
+                if(url.length > 10) {
+                    errorBox.style.display = 'block';
+                    errorBox.innerText = "Invalid URL. It should look like: https://gist.github.com/username/abc12345...";
+                }
+                controls.style.opacity = '0.5';
+                controls.style.pointerEvents = 'none';
             }
         }
 
-        function downloadQR(format = 'png') {
-            qrCode.download({ name: "dynamic-qr", extension: format });
+        function updateQR() {
+            const url = document.getElementById('gist-url').value;
+            const entryId = document.getElementById('entry-id').value || "promo";
+            const color = document.getElementById('qr-color').value;
+            const bg = document.getElementById('bg-color').value;
+            const logo = document.getElementById('logo-url').value;
+
+            // Extract User and ID again
+            const regex = /gist\.github\.com\/([^\/]+)\/([a-zA-Z0-9]+)/;
+            const match = url.match(regex);
+            
+            if(!match) return;
+
+            const user = match[1];
+            const gistId = match[2];
+
+            // Build the Smart URL
+            const dynamicUrl = `${currentHost}?u=${user}&g=${gistId}&id=${entryId}`;
+
+            qrCode.update({
+                data: dynamicUrl,
+                image: logo,
+                dotsOptions: { color: color, type: "rounded" },
+                backgroundOptions: { color: bg }
+            });
         }
 
-        // Run App
-        init();
-
+        function downloadQR() {
+            qrCode.download({ name: "mobile-qr", extension: "png" });
+        }
     </script>
 </body>
 </html>
