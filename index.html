@@ -14,9 +14,8 @@
             --primary: #ffffff;
             --primary-text: #000000;
             --text: #eaeaea;
-            --text-dim: #666666;
+            --text-dim: #888888;
             --danger: #ff3333;
-            --accent: #00ff9d; /* Tech green for stats */
         }
 
         /* --- RESET & TYPOGRAPHY --- */
@@ -48,80 +47,98 @@
 
         /* --- FORMS & INPUTS --- */
         label {
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
+            letter-spacing: 1px;
             color: var(--text-dim);
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             display: block;
-            font-weight: 700;
+            font-weight: 600;
         }
 
         input, select {
             background: var(--surface);
             border: 1px solid var(--border);
             color: var(--text);
-            padding: 18px;
-            border-radius: 0;
+            padding: 16px;
+            border-radius: 4px;
             width: 100%;
             font-size: 1rem;
             transition: border-color 0.2s;
             appearance: none;
         }
 
-        input:focus, select:focus { border-color: var(--primary); }
-        input:disabled { opacity: 0.5; cursor: not-allowed; border-style: dashed; }
-
-        /* --- BUTTONS --- */
-        .btn {
-            display: inline-flex; align-items: center; justify-content: center;
-            padding: 16px 24px; border-radius: 0;
-            font-weight: 700; font-size: 0.9rem; letter-spacing: 1px;
-            cursor: pointer; transition: all 0.2s; border: none;
-            text-decoration: none; width: 100%; text-transform: uppercase;
+        input:focus, select:focus {
+            border-color: var(--primary);
         }
 
-        .btn-primary { background: var(--primary); color: var(--primary-text); }
+        input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            border-style: dashed;
+        }
+
+        /* --- BUTTONS (Swiss Style) --- */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            padding: 14px 20px; border-radius: 4px;
+            font-weight: 600; font-size: 0.9rem; letter-spacing: 0.5px;
+            cursor: pointer; transition: all 0.2s; border: none;
+            text-decoration: none; width: 100%;
+        }
+
+        /* Primary: Solid White (Used for QR Button) */
+        .btn-primary {
+            background: var(--primary);
+            color: var(--primary-text);
+        }
         .btn-primary:hover { opacity: 0.9; }
         .btn-primary:active { transform: scale(0.98); }
 
-        .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text); font-weight: 500; }
+        /* Secondary: Outline (Used for Edit) */
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
         .btn-secondary:hover { border-color: var(--text); }
         
-        .btn-qr {
-            background: var(--primary); color: var(--primary-text);
-            font-weight: 900; letter-spacing: 1px; padding: 15px 25px; min-width: 120px;
+        /* Danger: Red Outline (Used for Delete) */
+        .btn-danger {
+            background: transparent;
+            border: 1px solid #552222;
+            color: var(--danger);
         }
-        .btn-qr:hover { transform: scale(1.02); }
-
-        .btn-icon { 
-            background: transparent; border: 1px solid var(--border); 
-            color: var(--text-dim); width: 40px; height: 40px; padding: 0; 
-            border-radius: 50%;
-        }
-        .btn-icon:hover { color: var(--text); border-color: var(--text); }
-        .btn-icon.danger:hover { color: var(--danger); border-color: var(--danger); }
+        .btn-danger:hover { border-color: var(--danger); }
 
         /* --- CARDS --- */
-        .panel { border: 1px solid var(--border); padding: 30px; margin-bottom: 40px; background: var(--bg); }
+        .panel {
+            border: 1px solid var(--border);
+            padding: 24px;
+            margin-bottom: 24px;
+            background: var(--bg);
+        }
 
         /* --- LOGIN SCREEN --- */
-        #login-screen { text-align: left; max-width: 500px; }
-        .login-title { font-size: 2.5rem; font-weight: 800; margin-bottom: 10px; color: var(--primary); letter-spacing: -2px; }
+        #login-screen { text-align: left; }
+        .login-title { font-size: 2rem; font-weight: 300; margin-bottom: 10px; color: var(--primary); letter-spacing: -1px; }
         .login-desc { color: var(--text-dim); margin-bottom: 40px; line-height: 1.6; }
         
         .guide-box {
-            border-left: 2px solid var(--border); padding-left: 20px;
-            margin-bottom: 40px; color: var(--text-dim); font-size: 0.9rem; line-height: 1.8;
+            border-left: 2px solid var(--border);
+            padding-left: 20px;
+            margin-bottom: 40px;
+            color: var(--text-dim);
+            font-size: 0.9rem;
         }
-        .guide-box strong { color: var(--text); }
+        .guide-box strong { color: var(--text); display: block; margin-bottom: 5px; }
 
         /* --- DASHBOARD HEADER --- */
         header { 
             display: flex; justify-content: space-between; align-items: center; 
-            margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid var(--border);
+            margin-bottom: 40px; border-bottom: 1px solid var(--border); padding-bottom: 20px; 
         }
-        .brand { font-weight: 800; letter-spacing: -1px; font-size: 1.5rem; }
+        .brand { font-weight: 700; letter-spacing: -1px; font-size: 1.2rem; }
         .brand span { font-weight: 300; color: var(--text-dim); }
 
         /* --- LIST ITEMS --- */
@@ -131,56 +148,50 @@
         }
 
         .link-item {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 25px 0; border-bottom: 1px solid var(--border); gap: 20px;
+            display: flex; flex-direction: column;
+            padding: 24px 0;
+            border-bottom: 1px solid var(--border);
+            gap: 15px;
         }
         
-        .link-content { flex: 1; overflow: hidden; }
-        .link-id { 
-            font-size: 1.2rem; font-weight: 700; color: var(--text); 
-            letter-spacing: -0.5px; margin-bottom: 6px; display: block;
+        @media(min-width: 600px) {
+            .link-item { flex-direction: row; align-items: center; justify-content: space-between; }
         }
-        .link-url { 
-            font-size: 0.85rem; color: var(--text-dim); font-family: monospace;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;
-        }
-        
-        /* NEW: Stats Badge */
-        .stats-badge {
-            display: inline-flex; gap: 15px; margin-top: 8px;
-            font-size: 0.75rem; color: var(--text-dim); font-family: monospace;
-            background: #111; padding: 6px 10px; border-radius: 4px; border: 1px solid #222;
-        }
-        .stat-val { color: var(--primary); font-weight: bold; }
-        .stat-unique { color: var(--accent); }
 
-        .link-actions { display: flex; align-items: center; gap: 15px; }
+        .link-info { flex: 1; overflow: hidden; }
+        .link-id { font-size: 1.1rem; font-weight: 500; margin-bottom: 4px; color: var(--primary); letter-spacing: -0.5px; }
+        .link-url { font-size: 0.85rem; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: monospace; }
+
+        .link-actions { display: flex; gap: 10px; }
 
         /* --- QR STUDIO MODAL --- */
         #qr-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg); z-index: 500; overflow-y: auto;
+            background: var(--bg); z-index: 500;
+            overflow-y: auto;
         }
         
         .studio-layout {
             display: flex; flex-direction: column; min-height: 100%;
-            max-width: 1200px; margin: 0 auto;
+            max-width: 1000px; margin: 0 auto;
         }
 
         .studio-preview {
-            flex: 1; display: flex; align-items: center; justify-content: center;
-            background: #000; border-bottom: 1px solid var(--border); padding: 40px 20px;
+            flex: 1; 
+            display: flex; align-items: center; justify-content: center;
+            background: #0a0a0a; border-bottom: 1px solid var(--border);
+            padding: 40px 20px;
         }
 
         .studio-controls {
-            padding: 40px 30px; width: 100%; max-width: 450px; margin: 0 auto;
-            border-left: 1px solid var(--border); background: #080808;
+            padding: 40px 20px;
+            max-width: 500px; margin: 0 auto; width: 100%;
         }
 
-        @media (min-width: 900px) {
+        @media (min-width: 800px) {
             .studio-layout { flex-direction: row; height: 100vh; overflow: hidden; }
-            .studio-preview { flex: 1; border-bottom: none; border-right: none; }
-            .studio-controls { flex: 0 0 400px; overflow-y: auto; border-left: 1px solid var(--border); }
+            .studio-preview { flex: 1; border-bottom: none; border-right: 1px solid var(--border); }
+            .studio-controls { flex: 0 0 400px; overflow-y: auto; }
         }
 
         .studio-header {
@@ -188,11 +199,11 @@
             margin-bottom: 30px; border-bottom: 1px solid var(--border); padding-bottom: 20px;
         }
 
-        .control-group { margin-bottom: 30px; }
+        .control-group { margin-bottom: 25px; }
         .row { display: flex; gap: 15px; }
         .col { flex: 1; }
 
-        input[type="color"] { height: 50px; padding: 0; border: none; cursor: pointer; border-radius: 4px; }
+        input[type="color"] { height: 45px; padding: 0; border: none; cursor: pointer; }
 
         /* --- LOADER --- */
         #loader {
@@ -201,10 +212,10 @@
             display: flex; align-items: center; justify-content: center;
         }
         .spinner {
-            width: 40px; height: 2px; background: var(--primary);
-            animation: stretch 1s infinite ease-in-out;
+            width: 20px; height: 20px; background: var(--primary);
+            animation: pulse 1.5s infinite ease-in-out;
         }
-        @keyframes stretch { 0%, 100% { width: 40px; } 50% { width: 100px; } }
+        @keyframes pulse { 0% { transform: scale(0.8); opacity: 0.5; } 100% { transform: scale(1.5); opacity: 0; } }
 
     </style>
 </head>
@@ -216,7 +227,7 @@
 
     <div id="login-screen" class="container hidden fade-in">
         <div class="login-title">QR Studio</div>
-        <p class="login-desc">Connect to GitHub to manage dynamic QR codes with live tracking.</p>
+        <p class="login-desc">Enter your GitHub Token to manage your dynamic QR codes securely.</p>
 
         <div class="guide-box">
             <strong>First time?</strong>
@@ -225,17 +236,17 @@
             3. Copy the <code>ghp_...</code> key and paste it here.
         </div>
         
-        <a href="https://github.com/settings/tokens/new?scopes=gist&description=QR%20Studio" target="_blank" class="btn btn-secondary" style="margin-bottom: 25px;">
+        <a href="https://github.com/settings/tokens/new?scopes=gist&description=QR%20Studio" target="_blank" class="btn btn-secondary" style="margin-bottom: 20px;">
             Open GitHub Settings &rarr;
         </a>
 
-        <div>
-            <label>Paste Access Token</label>
+        <div style="margin-top:20px;">
+            <label>API Token</label>
             <input type="password" id="api-token" placeholder="ghp_xxxxxxxxxxxx" />
         </div>
         
-        <button class="btn btn-primary" style="margin-top: 25px;" onclick="handleLogin()">
-            Enter Studio
+        <button class="btn btn-primary" style="margin-top: 20px;" onclick="handleLogin()">
+            Authenticate
         </button>
     </div>
 
@@ -243,26 +254,26 @@
         <header>
             <div class="brand">QR<span>Studio</span></div>
             <div style="display:flex; gap: 10px;">
-                <button class="btn btn-secondary btn-icon" onclick="backupData()" title="Backup">↓</button>
-                <button class="btn btn-secondary btn-icon" onclick="logout()" title="Logout">×</button>
+                <button class="btn btn-secondary" style="width: auto; padding: 10px 15px;" onclick="backupData()" title="Backup">↓</button>
+                <button class="btn btn-secondary" style="width: auto; padding: 10px 15px;" onclick="logout()" title="Logout">×</button>
             </div>
         </header>
 
         <div class="panel">
-            <h2 id="editor-heading" style="margin: 0 0 25px 0; font-size: 0.9rem; letter-spacing:1px; text-transform: uppercase;">New QR Code</h2>
+            <h2 id="editor-heading" style="margin: 0 0 20px 0; font-size: 1rem; font-weight: 500;">Create QR Code</h2>
             
-            <div style="display: flex; flex-direction: column; gap: 20px;">
+            <div style="display: flex; flex-direction: column; gap: 15px;">
                 <div>
                     <label>Short ID (Name)</label>
                     <input id="inp-id" type="text" placeholder="e.g. SUMMER-SALE">
                 </div>
                 <div>
-                    <label>Destination Link</label>
-                    <input id="inp-url" type="url" placeholder="https://website.com">
+                    <label>Destination URL</label>
+                    <input id="inp-url" type="url" placeholder="https://...">
                 </div>
                 
                 <div style="display:flex; gap: 10px; margin-top: 10px;">
-                    <button id="btn-save" class="btn btn-primary" onclick="saveLink()">Generate QR</button>
+                    <button id="btn-save" class="btn btn-primary" onclick="saveLink()">Create QR</button>
                     <button id="btn-cancel" class="btn btn-secondary hidden" onclick="cancelEdit()">Cancel</button>
                 </div>
             </div>
@@ -270,26 +281,27 @@
 
         <span class="list-header">Active QR Codes</span>
         <div id="link-list"></div>
+        <div style="margin-top: 15px; text-align: center; color: var(--text-dim); font-size: 0.8rem; font-family: monospace;">
+            made with <span>❤</span> by <b>Harsha Varthan E P</b>
+        </div>
     </div>
 
     <div id="qr-modal" class="hidden">
         <div class="studio-layout">
             <div class="studio-preview">
-                <div style="background: white; padding: 20px; border-radius: 4px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
-                    <div id="qr-canvas"></div>
-                </div>
+                <div id="qr-canvas"></div>
             </div>
 
             <div class="studio-controls">
                 <div class="studio-header">
-                    <span style="font-weight:700; font-size: 1.2rem;">Customize</span>
-                    <button class="btn btn-secondary" style="width: auto; padding: 10px 20px; font-size: 0.8rem;" onclick="closeModal()">Close</button>
+                    <span style="font-weight:700;">Design Studio</span>
+                    <button class="btn btn-secondary" style="width: auto; padding: 8px 15px; font-size: 0.8rem;" onclick="closeModal()">Close</button>
                 </div>
 
                 <div class="control-group">
                     <div class="row">
                         <div class="col">
-                            <label>Foreground</label>
+                            <label>Dots Color</label>
                             <input type="color" id="qr-color-dots" value="#000000" oninput="redrawQR()">
                         </div>
                         <div class="col">
@@ -320,14 +332,14 @@
                 </div>
 
                 <div class="control-group">
-                    <label>Center Logo URL</label>
+                    <label>Logo URL (Optional)</label>
                     <input type="text" id="qr-logo" placeholder="https://..." oninput="redrawQR()">
                 </div>
 
-                <div style="margin-top: 50px;">
-                    <button class="btn btn-primary" onclick="downloadQR()">Download Image</button>
-                    <div style="margin-top: 20px; text-align: center; color: var(--text-dim); font-size: 0.8rem; font-family: monospace;">
-                        LINK: <span id="qr-target-id"></span>
+                <div style="margin-top: 40px;">
+                    <button class="btn btn-primary" onclick="downloadQR()">Download .PNG</button>
+                    <div style="margin-top: 15px; text-align: center; color: var(--text-dim); font-size: 0.8rem; font-family: monospace;">
+                        ID: <span id="qr-target-id"></span>
                     </div>
                 </div>
             </div>
@@ -344,12 +356,9 @@
         let CURRENT_QR_ID = "";
         const appUrl = window.location.href.split('?')[0];
         
-        // Counter API Host
-        const COUNT_API = "https://api.countapi.xyz";
-
-        // QR Defaults
+        // Minimal QR Defaults
         const qrCode = new QRCodeStyling({
-            width: 320, height: 320, type: "svg",
+            width: 300, height: 300, type: "svg",
             dotsOptions: { color: "#111", type: "extra-rounded" },
             backgroundOptions: { color: "#ffffff" },
             imageOptions: { crossOrigin: "anonymous", margin: 10 }
@@ -448,64 +457,26 @@
             const ids = Object.keys(DB_DATA).reverse(); 
 
             if(ids.length === 0) {
-                list.innerHTML = "<div style='text-align:center; padding:40px 0; color:var(--text-dim); font-size:0.9rem;'>No active QR codes. Create one above.</div>";
+                list.innerHTML = "<div style='text-align:center; padding:40px 0; color:var(--text-dim); font-size:0.9rem;'>No active QR codes.</div>";
                 return;
             }
 
             ids.forEach(id => {
                 const item = document.createElement("div");
                 item.className = "link-item";
-                // Add container for stats
                 item.innerHTML = `
-                    <div class="link-content">
-                        <span class="link-id">${id}</span>
-                        <span class="link-url">${DB_DATA[id]}</span>
-                        <div class="stats-badge" id="stats-${id}">
-                            Loading stats...
-                        </div>
+                    <div class="link-info">
+                        <div class="link-id">${id}</div>
+                        <div class="link-url">${DB_DATA[id]}</div>
                     </div>
                     <div class="link-actions">
-                        <button class="btn-icon" onclick="startEdit('${id}')" title="Edit Link">✎</button>
-                        <button class="btn-icon danger" onclick="deleteLink('${id}')" title="Delete">×</button>
-                        <button class="btn btn-qr" onclick="openQRStudio('${id}')">QR CODE</button>
+                        <button class="btn btn-secondary" onclick="startEdit('${id}')" style="width:auto; padding: 12px 18px;">Edit</button>
+                        <button class="btn btn-primary" onclick="openQRStudio('${id}')" style="width:auto; padding: 12px 24px;">QR Code</button>
+                        <button class="btn btn-danger" onclick="deleteLink('${id}')" style="width:auto; padding: 12px 18px;">Delete</button>
                     </div>
                 `;
                 list.appendChild(item);
-                
-                // Fetch stats async
-                fetchStats(id);
             });
-        }
-
-        // --- NEW: Tracking Logic ---
-        async function fetchStats(id) {
-            const namespace = GIST_ID; // Use Gist ID as namespace
-            const totalKey = `${id}_total`;
-            const uniqueKey = `${id}_unique`;
-            
-            try {
-                // Fetch Total
-                const totalReq = await fetch(`${COUNT_API}/get/${namespace}/${totalKey}`);
-                const totalData = await totalReq.json();
-                
-                // Fetch Unique
-                const uniqueReq = await fetch(`${COUNT_API}/get/${namespace}/${uniqueKey}`);
-                const uniqueData = await uniqueReq.json();
-                
-                const total = totalData.value || 0;
-                const unique = uniqueData.value || 0;
-
-                document.getElementById(`stats-${id}`).innerHTML = `
-                    TOTAL: <span class="stat-val">${total}</span> | 
-                    UNIQUE: <span class="stat-val stat-unique">${unique}</span>
-                `;
-            } catch (e) {
-                // If keys don't exist yet (0 scans)
-                document.getElementById(`stats-${id}`).innerHTML = `
-                    TOTAL: <span class="stat-val">0</span> | 
-                    UNIQUE: <span class="stat-val stat-unique">0</span>
-                `;
-            }
         }
 
         function saveLink() {
@@ -533,13 +504,13 @@
             document.getElementById("inp-id").value = "";
             document.getElementById("inp-id").disabled = false;
             document.getElementById("inp-url").value = "";
-            document.getElementById("editor-heading").innerText = "New QR Code";
-            document.getElementById("btn-save").innerText = "Generate QR";
+            document.getElementById("editor-heading").innerText = "Create New QR";
+            document.getElementById("btn-save").innerText = "Create QR";
             document.getElementById("btn-cancel").classList.add("hidden");
         }
 
         async function deleteLink(id) {
-            if(confirm("Delete this QR Code? This cannot be undone.")) {
+            if(confirm("Delete this QR Code?")) {
                 delete DB_DATA[id];
                 syncToGitHub();
             }
@@ -577,58 +548,24 @@
         }
         function downloadQR() { qrCode.download({ name: `qr-${CURRENT_QR_ID}`, extension: "png" }); }
 
-        // ================= REDIRECT & TRACKING =================
+        // ================= REDIRECT & UTILS =================
         async function performRedirect(user, gistId, linkId) {
             switchTo("loader");
-            
-            // 1. Get Data from Gist
-            const t = new Date().getTime();
-            let destUrl = "";
             try {
+                const t = new Date().getTime();
                 const res = await fetch(`https://gist.githubusercontent.com/${user}/${gistId}/raw/${GIST_FILENAME}?t=${t}`);
                 if (!res.ok) throw new Error("Not found");
                 const data = await res.json();
-                if (data[linkId]) {
-                    destUrl = data[linkId];
-                } else {
-                    alert("QR Code not found");
-                    switchTo("login-screen");
-                    return;
-                }
-            } catch (e) {
-                alert("Error connecting to database");
-                switchTo("login-screen");
-                return;
-            }
-
-            // 2. TRACKING (Fire and Forget)
-            const namespace = gistId;
-            const totalKey = `${linkId}_total`;
-            const uniqueKey = `${linkId}_unique`;
-            const storageKey = `seen_${namespace}_${linkId}`;
-
-            try {
-                // Increment Total
-                fetch(`${COUNT_API}/hit/${namespace}/${totalKey}`, { keepalive: true });
-
-                // Check Unique
-                if (!localStorage.getItem(storageKey)) {
-                    fetch(`${COUNT_API}/hit/${namespace}/${uniqueKey}`, { keepalive: true });
-                    localStorage.setItem(storageKey, "1");
-                }
-            } catch (e) {
-                console.log("Tracking error (ignored)", e);
-            }
-
-            // 3. Redirect
-            window.location.replace(destUrl);
+                if (data[linkId]) window.location.replace(data[linkId]);
+                else { alert("QR Code not found"); switchTo("login-screen"); }
+            } catch (e) { alert("Error"); switchTo("login-screen"); }
         }
 
         function logout() { localStorage.clear(); location.reload(); }
         function backupData() {
             const a = document.createElement('a');
             a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(DB_DATA, null, 2));
-            a.download = "qr_backup.json";
+            a.download = "backup.json";
             a.click();
         }
     </script>
