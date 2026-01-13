@@ -16,7 +16,7 @@
             --text: #eaeaea;
             --text-dim: #666666;
             --danger: #ff3333;
-            --accent: #0070f3;
+            --accent: #00ff9d; /* Tech green for stats */
         }
 
         /* --- RESET & TYPOGRAPHY --- */
@@ -89,8 +89,8 @@
         .btn-secondary:hover { border-color: var(--text); }
         
         .btn-qr {
-            background: var(--primary); color: var(--primary-text); font-weight: 900;
-            letter-spacing: 1px; padding: 15px 25px; min-width: 120px;
+            background: var(--primary); color: var(--primary-text);
+            font-weight: 900; letter-spacing: 1px; padding: 15px 25px; min-width: 120px;
         }
         .btn-qr:hover { transform: scale(1.02); }
 
@@ -119,8 +119,7 @@
         /* --- DASHBOARD HEADER --- */
         header { 
             display: flex; justify-content: space-between; align-items: center; 
-            margin-bottom: 40px; padding-bottom: 20px; 
-            border-bottom: 1px solid var(--border);
+            margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid var(--border);
         }
         .brand { font-weight: 800; letter-spacing: -1px; font-size: 1.5rem; }
         .brand span { font-weight: 300; color: var(--text-dim); }
@@ -135,13 +134,30 @@
             display: flex; align-items: center; justify-content: space-between;
             padding: 25px 0; border-bottom: 1px solid var(--border); gap: 20px;
         }
+        
         .link-content { flex: 1; overflow: hidden; }
-        .link-id { font-size: 1.2rem; font-weight: 700; color: var(--text); letter-spacing: -0.5px; margin-bottom: 6px; display: block; }
-        .link-url { font-size: 0.85rem; color: var(--text-dim); font-family: monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+        .link-id { 
+            font-size: 1.2rem; font-weight: 700; color: var(--text); 
+            letter-spacing: -0.5px; margin-bottom: 6px; display: block;
+        }
+        .link-url { 
+            font-size: 0.85rem; color: var(--text-dim); font-family: monospace;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;
+        }
+        
+        /* NEW: Stats Badge */
+        .stats-badge {
+            display: inline-flex; gap: 15px; margin-top: 8px;
+            font-size: 0.75rem; color: var(--text-dim); font-family: monospace;
+            background: #111; padding: 6px 10px; border-radius: 4px; border: 1px solid #222;
+        }
+        .stat-val { color: var(--primary); font-weight: bold; }
+        .stat-unique { color: var(--accent); }
+
         .link-actions { display: flex; align-items: center; gap: 15px; }
 
-        /* --- QR STUDIO & ANALYTICS MODALS --- */
-        #qr-modal, #analytics-modal {
+        /* --- QR STUDIO MODAL --- */
+        #qr-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--bg); z-index: 500; overflow-y: auto;
         }
@@ -150,10 +166,12 @@
             display: flex; flex-direction: column; min-height: 100%;
             max-width: 1200px; margin: 0 auto;
         }
+
         .studio-preview {
             flex: 1; display: flex; align-items: center; justify-content: center;
             background: #000; border-bottom: 1px solid var(--border); padding: 40px 20px;
         }
+
         .studio-controls {
             padding: 40px 30px; width: 100%; max-width: 450px; margin: 0 auto;
             border-left: 1px solid var(--border); background: #080808;
@@ -173,22 +191,20 @@
         .control-group { margin-bottom: 30px; }
         .row { display: flex; gap: 15px; }
         .col { flex: 1; }
+
         input[type="color"] { height: 50px; padding: 0; border: none; cursor: pointer; border-radius: 4px; }
 
         /* --- LOADER --- */
         #loader {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--bg); z-index: 999;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            display: flex; align-items: center; justify-content: center;
         }
         .spinner {
             width: 40px; height: 2px; background: var(--primary);
             animation: stretch 1s infinite ease-in-out;
         }
         @keyframes stretch { 0%, 100% { width: 40px; } 50% { width: 100px; } }
-        
-        .redirect-stats { margin-top: 20px; color: var(--text-dim); font-size: 0.9rem; font-family: monospace; }
-        .redirect-count { color: var(--primary); font-weight: bold; }
 
     </style>
 </head>
@@ -196,14 +212,11 @@
 
     <div id="loader" class="hidden">
         <div class="spinner"></div>
-        <div class="redirect-stats hidden" id="redirect-msg">
-            SCANS BY YOU: <span class="redirect-count" id="scan-count">1</span>
-        </div>
     </div>
 
     <div id="login-screen" class="container hidden fade-in">
         <div class="login-title">QR Studio</div>
-        <p class="login-desc">Connect to your GitHub account to manage dynamic QR codes and analytics securely.</p>
+        <p class="login-desc">Connect to GitHub to manage dynamic QR codes with live tracking.</p>
 
         <div class="guide-box">
             <strong>First time?</strong>
@@ -213,7 +226,7 @@
         </div>
         
         <a href="https://github.com/settings/tokens/new?scopes=gist&description=QR%20Studio" target="_blank" class="btn btn-secondary" style="margin-bottom: 25px;">
-            Open GitHub Token Settings &rarr;
+            Open GitHub Settings &rarr;
         </a>
 
         <div>
@@ -230,9 +243,8 @@
         <header>
             <div class="brand">QR<span>Studio</span></div>
             <div style="display:flex; gap: 10px;">
-                <button class="btn btn-secondary" style="width: auto; padding: 10px 15px;" onclick="openAnalytics()" title="Analytics Setup">📊</button>
-                <button class="btn btn-secondary" style="width: auto; padding: 10px 15px;" onclick="backupData()" title="Backup">↓</button>
-                <button class="btn btn-secondary" style="width: auto; padding: 10px 15px;" onclick="logout()" title="Logout">×</button>
+                <button class="btn btn-secondary btn-icon" onclick="backupData()" title="Backup">↓</button>
+                <button class="btn btn-secondary btn-icon" onclick="logout()" title="Logout">×</button>
             </div>
         </header>
 
@@ -241,7 +253,7 @@
             
             <div style="display: flex; flex-direction: column; gap: 20px;">
                 <div>
-                    <label>QR Name (ID)</label>
+                    <label>Short ID (Name)</label>
                     <input id="inp-id" type="text" placeholder="e.g. SUMMER-SALE">
                 </div>
                 <div>
@@ -250,7 +262,7 @@
                 </div>
                 
                 <div style="display:flex; gap: 10px; margin-top: 10px;">
-                    <button id="btn-save" class="btn btn-primary" onclick="saveLink()">Generate QR Code</button>
+                    <button id="btn-save" class="btn btn-primary" onclick="saveLink()">Generate QR</button>
                     <button id="btn-cancel" class="btn btn-secondary hidden" onclick="cancelEdit()">Cancel</button>
                 </div>
             </div>
@@ -260,32 +272,6 @@
         <div id="link-list"></div>
     </div>
 
-    <div id="analytics-modal" class="hidden">
-        <div class="container fade-in" style="margin-top: 10vh;">
-            <div class="panel">
-                <h2 style="font-size: 1.5rem; margin-bottom: 10px;">Analytics Setup</h2>
-                <p style="color: var(--text-dim); line-height: 1.6; margin-bottom: 30px;">
-                    To track unique devices and total scans globally, enter a <strong>Google Analytics 4 Measurement ID</strong>. This allows free, serverless tracking.
-                </p>
-
-                <div>
-                    <label>Measurement ID (G-XXXXXXXXXX)</label>
-                    <input id="inp-ga-id" type="text" placeholder="G-ABC123456">
-                </div>
-
-                <div style="display:flex; gap: 15px; margin-top: 30px;">
-                    <button class="btn btn-primary" onclick="saveAnalytics()">Save Settings</button>
-                    <button class="btn btn-secondary" onclick="closeAnalytics()">Close</button>
-                </div>
-
-                <div class="guide-box" style="margin-top: 30px; border-color: var(--border);">
-                    <strong>Where to find this?</strong>
-                    Google Analytics > Admin > Data Streams > Web > Measurement ID.
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div id="qr-modal" class="hidden">
         <div class="studio-layout">
             <div class="studio-preview">
@@ -293,11 +279,13 @@
                     <div id="qr-canvas"></div>
                 </div>
             </div>
+
             <div class="studio-controls">
                 <div class="studio-header">
                     <span style="font-weight:700; font-size: 1.2rem;">Customize</span>
                     <button class="btn btn-secondary" style="width: auto; padding: 10px 20px; font-size: 0.8rem;" onclick="closeModal()">Close</button>
                 </div>
+
                 <div class="control-group">
                     <div class="row">
                         <div class="col">
@@ -310,6 +298,7 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="control-group">
                     <label>Pattern Style</label>
                     <select id="qr-dots-type" onchange="redrawQR()">
@@ -320,6 +309,7 @@
                         <option value="classy">Classy</option>
                     </select>
                 </div>
+
                 <div class="control-group">
                     <label>Corner Shape</label>
                     <select id="qr-corner-type" onchange="redrawQR()">
@@ -328,10 +318,12 @@
                         <option value="extra-rounded" selected>Rounded</option>
                     </select>
                 </div>
+
                 <div class="control-group">
                     <label>Center Logo URL</label>
                     <input type="text" id="qr-logo" placeholder="https://..." oninput="redrawQR()">
                 </div>
+
                 <div style="margin-top: 50px;">
                     <button class="btn btn-primary" onclick="downloadQR()">Download Image</button>
                     <div style="margin-top: 20px; text-align: center; color: var(--text-dim); font-size: 0.8rem; font-family: monospace;">
@@ -346,14 +338,15 @@
         // ================= CONFIG =================
         const GIST_FILENAME = "qr_database.json";
         const GIST_DESC = "QR Studio DB";
-        const SETTINGS_KEY = "$CONFIG"; // Hidden key for Analytics ID
-
         let GITHUB_TOKEN = localStorage.getItem("gh_token");
         let GIST_ID = localStorage.getItem("gh_gist_id");
         let DB_DATA = {};
         let CURRENT_QR_ID = "";
         const appUrl = window.location.href.split('?')[0];
         
+        // Counter API Host
+        const COUNT_API = "https://api.countapi.xyz";
+
         // QR Defaults
         const qrCode = new QRCodeStyling({
             width: 320, height: 320, type: "svg",
@@ -378,7 +371,7 @@
         };
 
         function switchTo(viewId) {
-            ['loader', 'login-screen', 'dashboard', 'qr-modal', 'analytics-modal'].forEach(id => {
+            ['loader', 'login-screen', 'dashboard', 'qr-modal'].forEach(id => {
                 document.getElementById(id).classList.add('hidden');
             });
             document.getElementById(viewId).classList.remove('hidden');
@@ -452,7 +445,7 @@
         function renderList() {
             const list = document.getElementById("link-list");
             list.innerHTML = "";
-            const ids = Object.keys(DB_DATA).filter(k => k !== SETTINGS_KEY).reverse(); 
+            const ids = Object.keys(DB_DATA).reverse(); 
 
             if(ids.length === 0) {
                 list.innerHTML = "<div style='text-align:center; padding:40px 0; color:var(--text-dim); font-size:0.9rem;'>No active QR codes. Create one above.</div>";
@@ -462,10 +455,14 @@
             ids.forEach(id => {
                 const item = document.createElement("div");
                 item.className = "link-item";
+                // Add container for stats
                 item.innerHTML = `
                     <div class="link-content">
                         <span class="link-id">${id}</span>
                         <span class="link-url">${DB_DATA[id]}</span>
+                        <div class="stats-badge" id="stats-${id}">
+                            Loading stats...
+                        </div>
                     </div>
                     <div class="link-actions">
                         <button class="btn-icon" onclick="startEdit('${id}')" title="Edit Link">✎</button>
@@ -474,7 +471,41 @@
                     </div>
                 `;
                 list.appendChild(item);
+                
+                // Fetch stats async
+                fetchStats(id);
             });
+        }
+
+        // --- NEW: Tracking Logic ---
+        async function fetchStats(id) {
+            const namespace = GIST_ID; // Use Gist ID as namespace
+            const totalKey = `${id}_total`;
+            const uniqueKey = `${id}_unique`;
+            
+            try {
+                // Fetch Total
+                const totalReq = await fetch(`${COUNT_API}/get/${namespace}/${totalKey}`);
+                const totalData = await totalReq.json();
+                
+                // Fetch Unique
+                const uniqueReq = await fetch(`${COUNT_API}/get/${namespace}/${uniqueKey}`);
+                const uniqueData = await uniqueReq.json();
+                
+                const total = totalData.value || 0;
+                const unique = uniqueData.value || 0;
+
+                document.getElementById(`stats-${id}`).innerHTML = `
+                    TOTAL: <span class="stat-val">${total}</span> | 
+                    UNIQUE: <span class="stat-val stat-unique">${unique}</span>
+                `;
+            } catch (e) {
+                // If keys don't exist yet (0 scans)
+                document.getElementById(`stats-${id}`).innerHTML = `
+                    TOTAL: <span class="stat-val">0</span> | 
+                    UNIQUE: <span class="stat-val stat-unique">0</span>
+                `;
+            }
         }
 
         function saveLink() {
@@ -494,7 +525,7 @@
             document.getElementById("inp-url").value = DB_DATA[id];
             
             document.getElementById("editor-heading").innerText = "Edit: " + id;
-            document.getElementById("btn-save").innerText = "Update Link";
+            document.getElementById("btn-save").innerText = "Update QR";
             document.getElementById("btn-cancel").classList.remove("hidden");
         }
 
@@ -503,33 +534,16 @@
             document.getElementById("inp-id").disabled = false;
             document.getElementById("inp-url").value = "";
             document.getElementById("editor-heading").innerText = "New QR Code";
-            document.getElementById("btn-save").innerText = "Generate QR Code";
+            document.getElementById("btn-save").innerText = "Generate QR";
             document.getElementById("btn-cancel").classList.add("hidden");
         }
 
         async function deleteLink(id) {
-            if(confirm("Delete this QR Code?")) {
+            if(confirm("Delete this QR Code? This cannot be undone.")) {
                 delete DB_DATA[id];
                 syncToGitHub();
             }
         }
-
-        // ================= ANALYTICS LOGIC =================
-        function openAnalytics() {
-            const config = DB_DATA[SETTINGS_KEY] || {};
-            document.getElementById("inp-ga-id").value = config.ga_id || "";
-            switchTo("analytics-modal");
-        }
-
-        function saveAnalytics() {
-            const gaId = document.getElementById("inp-ga-id").value.trim();
-            if (!DB_DATA[SETTINGS_KEY]) DB_DATA[SETTINGS_KEY] = {};
-            DB_DATA[SETTINGS_KEY].ga_id = gaId;
-            syncToGitHub();
-            switchTo("dashboard");
-        }
-
-        function closeAnalytics() { switchTo("dashboard"); }
 
         // ================= QR STUDIO =================
         function openQRStudio(id) {
@@ -567,64 +581,54 @@
         async function performRedirect(user, gistId, linkId) {
             switchTo("loader");
             
-            // 1. Local Tracking (Client Side)
-            let myScans = parseInt(localStorage.getItem(`scans_${linkId}`) || "0");
-            myScans++;
-            localStorage.setItem(`scans_${linkId}`, myScans);
-            
-            document.getElementById("redirect-msg").classList.remove("hidden");
-            document.getElementById("scan-count").innerText = myScans;
-
+            // 1. Get Data from Gist
+            const t = new Date().getTime();
+            let destUrl = "";
             try {
-                // 2. Fetch Gist Data
-                const t = new Date().getTime();
                 const res = await fetch(`https://gist.githubusercontent.com/${user}/${gistId}/raw/${GIST_FILENAME}?t=${t}`);
                 if (!res.ok) throw new Error("Not found");
                 const data = await res.json();
-                
-                const targetUrl = data[linkId];
-                const config = data[SETTINGS_KEY] || {};
-
-                if (targetUrl) {
-                    // 3. Fire Analytics (If Configured)
-                    if (config.ga_id) {
-                        // Inject GA dynamically
-                        const script = document.createElement('script');
-                        script.src = `https://www.googletagmanager.com/gtag/js?id=${config.ga_id}`;
-                        document.head.appendChild(script);
-                        
-                        window.dataLayer = window.dataLayer || [];
-                        function gtag(){dataLayer.push(arguments);}
-                        gtag('js', new Date());
-                        gtag('config', config.ga_id);
-                        
-                        // Send Scan Event
-                        gtag('event', 'scan_qr', {
-                            'event_category': 'QR Code',
-                            'event_label': linkId
-                        });
-
-                        // Small delay to ensure pixel fires
-                        setTimeout(() => { window.location.replace(targetUrl); }, 500);
-                    } else {
-                        // Immediate Redirect
-                        setTimeout(() => { window.location.replace(targetUrl); }, 800);
-                    }
-                } else { 
-                    alert("QR Code link deleted or invalid."); 
-                    switchTo("login-screen"); 
+                if (data[linkId]) {
+                    destUrl = data[linkId];
+                } else {
+                    alert("QR Code not found");
+                    switchTo("login-screen");
+                    return;
                 }
-            } catch (e) { 
-                alert("Error connecting to database."); 
-                switchTo("login-screen"); 
+            } catch (e) {
+                alert("Error connecting to database");
+                switchTo("login-screen");
+                return;
             }
+
+            // 2. TRACKING (Fire and Forget)
+            const namespace = gistId;
+            const totalKey = `${linkId}_total`;
+            const uniqueKey = `${linkId}_unique`;
+            const storageKey = `seen_${namespace}_${linkId}`;
+
+            try {
+                // Increment Total
+                fetch(`${COUNT_API}/hit/${namespace}/${totalKey}`, { keepalive: true });
+
+                // Check Unique
+                if (!localStorage.getItem(storageKey)) {
+                    fetch(`${COUNT_API}/hit/${namespace}/${uniqueKey}`, { keepalive: true });
+                    localStorage.setItem(storageKey, "1");
+                }
+            } catch (e) {
+                console.log("Tracking error (ignored)", e);
+            }
+
+            // 3. Redirect
+            window.location.replace(destUrl);
         }
 
         function logout() { localStorage.clear(); location.reload(); }
         function backupData() {
             const a = document.createElement('a');
             a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(DB_DATA, null, 2));
-            a.download = "backup.json";
+            a.download = "qr_backup.json";
             a.click();
         }
     </script>
